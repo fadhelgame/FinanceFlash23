@@ -428,8 +428,8 @@ export default function AccountDetailPage() {
 
         {/* Mark as Settled for Loan accounts */}
         {account.type === 'Loan' && !account.isSettled && (
-          <div className="card mb-6" style={{ borderColor: 'color-mix(in oklch, var(--color-success) 30%, transparent)', background: 'color-mix(in oklch, var(--color-success) 5%, transparent)' }}>
-            <div className="flex items-center justify-between">
+          <div className="card mb-6" style={{ borderColor: 'color-mix(in oklch, var(--color-success) 25%, transparent)', background: 'color-mix(in oklch, var(--color-paper-0) 95%, var(--color-success))' }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0 justify-between">
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--color-ink-0)' }}>Loan settled?</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-ink-2)' }}>Mark this loan as fully paid. It will move to Loan History.</p>
@@ -440,7 +440,7 @@ export default function AccountDetailPage() {
                     dispatch({ type: 'UPDATE_ACCOUNT', payload: { ...account, isSettled: true, settledAt: new Date().toISOString() } })
                   }
                 }}
-                className="btn-primary px-4 py-2 text-sm"
+                className="btn-primary px-5 py-2.5 text-sm shrink-0"
               >
                 <Check className="w-4 h-4" /> Settled
               </button>

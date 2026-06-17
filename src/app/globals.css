@@ -99,12 +99,14 @@ button, input, select { font: inherit; color: inherit; }
   box-shadow: rgba(255,255,255,0.16) 0px 1px 0px inset, rgba(0,10,60,0.4) 0px 8px 24px -10px;
 }
 .btn-primary:hover { background: var(--color-accent); border-color: var(--color-accent); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0px); }
 .btn-ghost {
   background: transparent;
   color: var(--color-ink-0);
   border-color: color-mix(in oklch, var(--color-ink-0) 16%, transparent);
 }
 .btn-ghost:hover { background: var(--color-paper-2); border-color: color-mix(in oklch, var(--color-ink-0) 22%, transparent); }
+.btn-ghost:active { transform: translateY(0px); }
 
 /* Cards */
 .card {
