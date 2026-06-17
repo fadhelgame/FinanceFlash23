@@ -16,30 +16,30 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a]">
-        <div className="animate-pulse text-white/50">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse" style={{ color: 'var(--color-ink-2)' }}>Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a1a] p-6">
-      <div className="glass-card p-10 max-w-sm w-full text-center space-y-8">
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="card p-10 max-w-sm w-full text-center space-y-8" style={{ background: 'var(--color-paper-0)' }}>
         {/* Logo / Brand */}
         <div className="space-y-2">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto shadow-lg shadow-blue-900/30">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'var(--color-accent)' }}>
+            <svg className="w-8 h-8" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white">Finance Flash</h1>
-          <p className="text-white/50 text-sm">Track your finances in a flash</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</h1>
+          <p className="text-sm" style={{ color: 'var(--color-ink-2)' }}>Track your finances <span className="italic-accent">in a flash</span></p>
         </div>
 
         {/* Sign in button */}
         <button
           onClick={login}
-          className="w-full py-3 px-6 bg-white/10 hover:bg-white/15 text-white rounded-xl font-medium flex items-center justify-center gap-3 transition-all duration-200 border border-white/10 hover:border-white/20"
+          className="btn btn-primary w-full justify-center"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -51,7 +51,7 @@ export default function AuthPage() {
           Sign in with Google
         </button>
 
-        <p className="text-white/30 text-xs">
+        <p className="text-xs" style={{ color: 'var(--color-ink-3)' }}>
           Your data stays on your device and Google Drive
         </p>
       </div>

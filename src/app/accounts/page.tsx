@@ -18,7 +18,7 @@ const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
 
 function AcctIcon({ type, className, style }: { type: AccountType; className?: string; style?: React.CSSProperties }) {
   const iconName = ACCOUNT_ICONS[type]
-  const props = { className: className || 'w-5 h-5', style: style || { color: '#fff' } }
+  const props = { className: className || 'w-5 h-5', style: style || { color: 'var(--color-ink-0)' } }
   switch (iconName) {
     case 'banknote': return <Banknote {...props} />
     case 'building': return <Wallet {...props} />
@@ -65,24 +65,24 @@ function AddAccountModal({ open, onClose, onSave }: { open: boolean; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-[#0a0a1a] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up">
-        <h2 className="text-lg font-semibold text-white mb-6">Add Account</h2>
+      <div className="relative w-full max-w-md card rounded-t-3xl sm:rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up" style={{ background: 'var(--color-paper-0)' }}>
+        <h2 className="text-lg font-semibold mb-6" style={{ color: 'var(--color-ink-0)' }}>Add Account</h2>
 
         {/* Name */}
         <div className="mb-4">
-          <label className="text-xs text-white/40 mb-2 block">Account Name</label>
+          <label className="mono-label mb-2 block">Account Name</label>
           <input
             type="text"
             placeholder="e.g. Main Wallet"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full bg-white/5 rounded-xl px-4 py-3 text-white outline-none placeholder-white/30"
+            className="w-full rounded-xl px-4 py-3 outline-none" style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }}
           />
         </div>
 
         {/* Type Picker */}
         <div className="mb-4">
-          <label className="text-xs text-white/40 mb-3 block">Type</label>
+          <label className="mono-label mb-3 block">Type</label>
           <div className="grid grid-cols-3 gap-2">
             {ACCOUNT_TYPES.map(at => {
               const color = ACCOUNT_TYPE_COLORS[at]
@@ -91,17 +91,18 @@ function AddAccountModal({ open, onClose, onSave }: { open: boolean; onClose: ()
                 <button
                   key={at}
                   onClick={() => setType(at)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
-                    selected ? 'bg-white/10 ring-1 ring-white/20' : 'bg-white/5'
-                  }`}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all`}
+                  style={{
+                    background: selected ? 'var(--color-paper-2)' : 'var(--color-paper-1)',
+                  }}
                 >
                   <div
                     className="w-9 h-9 rounded-full flex items-center justify-center"
                     style={{ background: selected ? color : `${color}33` }}
                   >
-                    <AcctIcon type={at} className="w-4 h-4" />
+                    <AcctIcon type={at} className="w-4 h-4" style={{ color: selected ? '#fff' : color }} />
                   </div>
-                  <span className={`text-[10px] text-center ${selected ? 'text-white' : 'text-white/50'}`}>
+                  <span className="text-[10px] text-center" style={{ color: selected ? 'var(--color-ink-0)' : 'var(--color-ink-2)' }}>
                     {ACCOUNT_TYPE_LABELS[at]}
                   </span>
                 </button>
@@ -112,16 +113,16 @@ function AddAccountModal({ open, onClose, onSave }: { open: boolean; onClose: ()
 
         {/* Initial Balance */}
         <div className="mb-6">
-          <label className="text-xs text-white/40 mb-2 block">Initial Balance</label>
-          <div className="flex items-center gap-2 bg-white/5 rounded-xl px-4 py-3">
-            <span className="text-lg font-bold text-white/50">Rp</span>
+          <label className="mono-label mb-2 block">Initial Balance</label>
+          <div className="flex items-center gap-2 rounded-xl px-4 py-3" style={{ background: 'var(--color-paper-2)' }}>
+            <span className="text-lg font-bold" style={{ color: 'var(--color-ink-2)' }}>Rp</span>
             <input
               type="text"
               inputMode="numeric"
               placeholder="0"
               value={balance}
               onChange={e => setBalance(e.target.value.replace(/[^0-9]/g, ''))}
-              className="flex-1 bg-transparent text-lg font-bold text-white outline-none placeholder-white/20"
+              className="flex-1 bg-transparent text-lg font-bold outline-none" style={{ color: 'var(--color-ink-0)' }}
             />
           </div>
         </div>
@@ -130,13 +131,13 @@ function AddAccountModal({ open, onClose, onSave }: { open: boolean; onClose: ()
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-white/5 text-white/70 font-medium hover:bg-white/10 transition-all"
+            className="btn-ghost flex-1 py-3"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-500 transition-all"
+            className="btn-primary flex-1 py-3"
           >
             Save
           </button>
@@ -158,26 +159,46 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a1a] pb-24">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-[#0a0a1a]/80 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center gap-3">
-        <Link href="/" className="p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition-all">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-lg font-semibold text-white">Accounts</h1>
-      </header>
+    <div className="pb-24">
+      {/* Floating pill nav */}
+      <nav className="nav-pill">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
+            <svg className="w-3.5 h-3.5" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span className="font-semibold" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Link href="/" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Dashboard</Link>
+          <Link href="/accounts" className="px-3 py-1.5 rounded-full font-medium" style={{ color: 'var(--color-accent)', background: 'var(--color-accent-tint)' }}>Accounts</Link>
+          <Link href="/transactions" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Txns</Link>
+          <Link href="/recurring" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Recurring</Link>
+        </div>
+      </nav>
 
-      <main className="px-4 max-w-lg mx-auto mt-5">
+      <main className="section pt-20">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="section-title" style={{ margin: 0 }}>Accounts</h1>
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn btn-primary text-sm px-5 py-2"
+          >
+            <Plus className="w-4 h-4" /> Add
+          </button>
+        </div>
+
         {accounts.length === 0 ? (
-          <div className="glass-card p-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Wallet className="w-7 h-7 text-white/30" />
+          <div className="card text-center p-10">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--color-paper-2)' }}>
+              <Wallet className="w-7 h-7" style={{ color: 'var(--color-ink-3)' }} />
             </div>
-            <h2 className="text-lg font-semibold text-white mb-2">No accounts yet</h2>
-            <p className="text-sm text-white/40 mb-6">Add your first account to start tracking</p>
+            <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>No accounts yet</h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-ink-2)' }}>Add your first account to start tracking</p>
             <button
               onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all"
+              className="btn btn-primary"
             >
               Add your first account
             </button>
@@ -191,7 +212,7 @@ export default function AccountsPage() {
                 <Link
                   key={acc.id}
                   href={`/accounts/${acc.id}`}
-                  className="glass-card p-4 flex items-center gap-4 hover:bg-white/[0.08] transition-all"
+                  className="card flex items-center gap-4 hover:scale-[1.01] transition-all"
                 >
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
@@ -200,10 +221,10 @@ export default function AccountsPage() {
                     <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium text-white truncate">{acc.name}</p>
-                    <p className="text-xs text-white/40">{acc.type}</p>
+                    <p className="text-base font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{acc.name}</p>
+                    <p className="mono-label text-xs mt-0.5">{acc.type}</p>
                   </div>
-                  <p className="text-lg font-bold text-white">{formatIDR(balance)}</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--color-ink-0)' }}>{formatIDR(balance)}</p>
                 </Link>
               )
             })}
@@ -226,11 +247,8 @@ export default function AccountsPage() {
       />
 
       <style jsx global>{`
-        @keyframes slide-up {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-up { animation: slide-up 0.25s ease-out; }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   )
