@@ -502,7 +502,17 @@ export default function DashboardPage() {
             <p className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}>
               Start tracking your finances today. No credit card, no download, no commitment.
             </p>
-            <button onClick={login} className="btn-primary px-8 py-3.5 text-base" style={{ background: 'var(--color-paper-0)', color: 'var(--color-ink-0)', borderColor: 'var(--color-paper-0)' }}>
+            <button
+              onClick={login}
+              className="btn-primary px-8 py-3.5 text-base"
+              style={{
+                background: 'var(--color-paper-0)',
+                color: 'var(--color-ink-0)',
+                borderColor: 'var(--color-paper-0)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-accent)'; e.currentTarget.style.color = 'var(--color-paper-0)'; e.currentTarget.style.borderColor = 'var(--color-accent)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-paper-0)'; e.currentTarget.style.color = 'var(--color-ink-0)'; e.currentTarget.style.borderColor = 'var(--color-paper-0)' }}
+            >
               Get started free
             </button>
           </div>
