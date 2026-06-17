@@ -432,7 +432,6 @@ export default function DashboardPage() {
               >
                 Track your money.
               </VerticalCutReveal>
-              <br />
               <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
