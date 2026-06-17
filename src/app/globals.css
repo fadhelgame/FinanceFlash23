@@ -53,13 +53,24 @@ button, input, select { font: inherit; color: inherit; }
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: 6px 8px 6px 18px;
+  padding: 6px 8px 6px 14px;
   background: color-mix(in oklch, var(--color-paper-0) 78%, transparent);
   backdrop-filter: blur(20px);
   border: var(--rule-soft);
   border-radius: var(--radius-pill);
   box-shadow: rgba(255,255,255,0.6) 0px 1px 0px inset, rgba(20,30,80,0.18) 0px 8px 30px -12px;
   font-size: var(--text-sm);
+  max-width: calc(100vw - 24px);
+  width: fit-content;
+}
+
+@media (max-width: 640px) {
+  .nav-pill {
+    top: 12px;
+    padding: 5px 6px 5px 12px;
+    max-width: calc(100vw - 16px);
+    gap: var(--space-sm);
+  }
 }
 
 .nav-pill a {

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
 import { formatIDR, CATEGORIES, generateId } from '@/lib/types'
 import type { RecurringTransaction, TransactionCategory } from '@/lib/types'
@@ -304,23 +305,7 @@ export default function RecurringPage() {
 
   return (
     <div className="pb-24">
-      {/* Floating pill nav */}
-      <nav className="nav-pill">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
-            <svg className="w-3.5 h-3.5" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <span className="font-semibold" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Link href="/" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Dashboard</Link>
-          <Link href="/accounts" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Accounts</Link>
-          <Link href="/transactions" className="px-3 py-1.5 rounded-full hover:bg-[var(--color-paper-2)] transition-all" style={{ color: 'var(--color-ink-2)' }}>Txns</Link>
-          <Link href="/recurring" className="px-3 py-1.5 rounded-full font-medium" style={{ color: 'var(--color-accent)', background: 'var(--color-accent-tint)' }}>Recurring</Link>
-        </div>
-      </nav>
+      <NavBar />
 
       <main className="section pt-20">
         <h1 className="section-title mb-6">Recurring</h1>
