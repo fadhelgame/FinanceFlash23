@@ -398,7 +398,6 @@ export default function DashboardPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen page-grid">
-        <NavBar />
 
         {/* Hero */}
         <section className="section pt-32 sm:pt-40 pb-20 sm:pb-32 text-center relative">
