@@ -28,6 +28,7 @@ export default function NavBar() {
           </svg>
         </div>
         <span className="font-semibold hidden sm:inline" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</span>
+        <span className="font-semibold sm:hidden text-xs truncate max-w-[80px]" style={{ color: 'var(--color-ink-0)' }}>FF</span>
       </div>
 
       {/* Desktop links */}
@@ -79,7 +80,7 @@ export default function NavBar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
-          className="sm:hidden fixed left-1/2 -translate-x-1/2 top-[72px] w-[calc(100%-32px)] max-w-xs rounded-2xl p-3 shadow-lg border flex flex-col gap-1"
+          className="sm:hidden fixed left-1/2 -translate-x-1/2 top-[72px] w-[90vw] max-w-sm rounded-2xl p-3 shadow-lg border flex flex-col gap-1 overflow-hidden"
           style={{
             background: 'color-mix(in oklch, var(--color-paper-0) 98%, transparent)',
             backdropFilter: 'blur(24px)',
@@ -105,14 +106,16 @@ export default function NavBar() {
             )
           })}
           <div className="h-px my-2" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
-          <div className="flex items-center gap-2 px-4 py-2">
-            <span className="live-dot" />
-            <span className="mono-label">LIVE</span>
-            <span className="flex-1" />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2">
+            <div className="flex items-center gap-1.5">
+              <span className="live-dot" />
+              <span className="mono-label">LIVE</span>
+            </div>
+            <span className="flex-1 min-w-0" />
             {userEmail && (
-              <span className="text-xs truncate max-w-[120px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
+              <span className="text-xs truncate max-w-[140px] sm:max-w-[200px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
             )}
-            <button onClick={logout} className="btn-ghost px-2 py-1 text-xs" title="Logout">
+            <button onClick={logout} className="btn-ghost px-2 py-1 text-xs shrink-0" title="Logout">
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
