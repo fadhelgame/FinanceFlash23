@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { LogOut, Menu, X } from 'lucide-react'
+import { LogOut, Menu, X, LogIn } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Dashboard' },
@@ -15,7 +15,7 @@ const links = [
 
 export default function NavBar() {
   const pathname = usePathname()
-  const { userEmail, logout } = useAuth()
+  const { isAuthenticated, userEmail, login, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -31,40 +31,51 @@ export default function NavBar() {
         <span className="font-semibold sm:hidden text-xs truncate max-w-[80px]" style={{ color: 'var(--color-ink-0)' }}>FF</span>
       </div>
 
-      {/* Desktop links */}
-      <div className="hidden sm:flex items-center gap-1">
-        {links.map((link) => {
-          const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-3 py-1.5 rounded-full font-medium text-sm transition-all duration-200"
-              style={{
-                color: isActive ? 'var(--color-accent)' : 'var(--color-ink-2)',
-                background: isActive ? 'var(--color-accent-tint)' : 'transparent',
-              }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--color-paper-2)' }}
-              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-            >
-              {link.label}
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* Right side: live + email + actions */}
-      <div className="hidden sm:flex items-center gap-2 ml-auto">
-        <div className="flex items-center gap-1.5">
-          <span className="live-dot" />
-          <span className="mono-label">LIVE</span>
+      {/* Desktop — authenticated: nav links */}
+      {isAuthenticated && (
+        <div className="hidden sm:flex items-center gap-1">
+          {links.map((link) => {
+            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-3 py-1.5 rounded-full font-medium text-sm transition-all duration-200"
+                style={{
+                  color: isActive ? 'var(--color-accent)' : 'var(--color-ink-2)',
+                  background: isActive ? 'var(--color-accent-tint)' : 'transparent',
+                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--color-paper-2)' }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </div>
-        {userEmail && (
-          <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
+      )}
+
+      {/* Right side */}
+      <div className="hidden sm:flex items-center gap-2 ml-auto">
+        {isAuthenticated ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="live-dot" />
+              <span className="mono-label">LIVE</span>
+            </div>
+            {userEmail && (
+              <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
+            )}
+            <button onClick={logout} className="btn-ghost px-3 py-1.5 text-xs" title="Logout">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </>
+        ) : (
+          <button onClick={login} className="btn-primary px-4 py-1.5 text-sm flex items-center gap-2">
+            <LogIn className="w-4 h-4" />
+            Sign in
+          </button>
         )}
-        <button onClick={logout} className="btn-ghost px-3 py-1.5 text-xs" title="Logout">
-          <LogOut className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       {/* Hamburger — mobile only */}
@@ -88,37 +99,46 @@ export default function NavBar() {
             boxShadow: 'rgba(20,30,80,0.25) 0px 24px 60px -28px, rgba(20,30,80,0.08) 0px 4px 12px -4px',
           }}
         >
-          {links.map((link) => {
-            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
-                style={{
-                  color: isActive ? 'var(--color-accent)' : 'var(--color-ink-1)',
-                  background: isActive ? 'var(--color-accent-tint)' : 'transparent',
-                }}
-              >
-                {link.label}
-              </Link>
-            )
-          })}
-          <div className="h-px my-2" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2">
-            <div className="flex items-center gap-1.5">
-              <span className="live-dot" />
-              <span className="mono-label">LIVE</span>
-            </div>
-            <span className="flex-1 min-w-0" />
-            {userEmail && (
-              <span className="text-xs truncate max-w-[140px] sm:max-w-[200px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
-            )}
-            <button onClick={logout} className="btn-ghost px-2 py-1 text-xs shrink-0" title="Logout">
-              <LogOut className="w-3.5 h-3.5" />
+          {isAuthenticated ? (
+            <>
+              {links.map((link) => {
+                const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+                    style={{
+                      color: isActive ? 'var(--color-accent)' : 'var(--color-ink-1)',
+                      background: isActive ? 'var(--color-accent-tint)' : 'transparent',
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              })}
+              <div className="h-px my-2" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="live-dot" />
+                  <span className="mono-label">LIVE</span>
+                </div>
+                <span className="flex-1 min-w-0" />
+                {userEmail && (
+                  <span className="text-xs truncate max-w-[140px] sm:max-w-[200px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
+                )}
+                <button onClick={logout} className="btn-ghost px-2 py-1 text-xs shrink-0" title="Logout">
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <button onClick={() => { login(); setMenuOpen(false) }} className="btn-primary w-full py-3 text-sm flex items-center justify-center gap-2">
+              <LogIn className="w-4 h-4" />
+              Sign in with Google
             </button>
-          </div>
+          )}
         </div>
       )}
 

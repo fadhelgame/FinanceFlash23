@@ -395,30 +395,131 @@ export default function DashboardPage() {
   // ---------- Unauthenticated landing ----------
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="card p-10 max-w-sm w-full text-center space-y-8" style={{ background: 'var(--color-paper-0)' }}>
-          <div className="space-y-2">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'var(--color-accent)' }}>
-              <svg className="w-8 h-8" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+      <div className="min-h-screen page-grid">
+        <NavBar />
+
+        {/* Hero */}
+        <section className="section pt-32 sm:pt-40 pb-20 sm:pb-32 text-center relative">
+          <div className="max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs mono-label mb-8" style={{ background: 'var(--color-accent-tint)', color: 'var(--color-accent)', border: '1px solid color-mix(in oklch, var(--color-accent) 20%, transparent)' }}>
+              <span className="live-dot" />
+              Your data, your control
             </div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</h1>
-            <p className="text-sm" style={{ color: 'var(--color-ink-2)' }}>Track your personal finances <span className="italic-accent">in a flash</span></p>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em] mb-6" style={{ color: 'var(--color-ink-0)' }}>
+              Track your money.<br />
+              <span className="italic-accent">In a flash.</span>
+            </h1>
+            <p className="text-lg sm:text-xl max-w-xl mx-auto mb-10" style={{ color: 'var(--color-ink-1)' }}>
+              Finance Flash is a personal finance tracker that works on any device. 
+              No installation, no syncing, no headaches. Your data stays in your Google Drive.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button onClick={login} className="btn-primary px-8 py-3.5 text-base flex items-center gap-2">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                Sign in with Google
+              </button>
+              <button
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="btn-ghost px-8 py-3.5 text-base"
+              >
+                Learn more
+              </button>
+            </div>
           </div>
-          <button
-            onClick={login}
-            className="btn btn-primary w-full justify-center"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Sign in with Google
-          </button>
-        </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" className="section pb-20 sm:pb-32">
+          <div className="max-w-5xl mx-auto">
+            <p className="mono-label text-center mb-3">FEATURES</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16" style={{ color: 'var(--color-ink-0)' }}>
+              Everything you need to <span className="italic-accent">stay on top</span>
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <TrendingUp className="w-5 h-5" />,
+                  color: '#22c55e',
+                  title: 'Track Income & Expenses',
+                  desc: 'Log every transaction in seconds. Categorise your spending — Food, Transport, Bills, and more. Know where your money goes.',
+                },
+                {
+                  icon: <Wallet className="w-5 h-5" />,
+                  color: '#3b82f6',
+                  title: 'Multiple Accounts',
+                  desc: 'Cash, Bank, E-Wallet, Credit Card, Savings — manage them all in one place. Each account keeps its own balance.',
+                },
+                {
+                  icon: <RefreshCw className="w-5 h-5" />,
+                  color: '#a855f7',
+                  title: 'Recurring Transactions',
+                  desc: 'Set up monthly bills, subscriptions, and salary. Finance Flash auto-generates them so you never miss a thing.',
+                },
+                {
+                  icon: <ArrowDownLeft className="w-5 h-5" />,
+                  color: '#14b8a6',
+                  title: 'Export CSV & PDF',
+                  desc: 'Export any account or your full ledger. Perfect for tax season, budgeting reviews, or sharing with your partner.',
+                },
+                {
+                  icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+                  color: '#f97316',
+                  title: 'Google Drive Backup',
+                  desc: 'All your data syncs to your own Google Drive. No servers, no strangers — just you and your spreadsheet-in-the-sky.',
+                },
+                {
+                  icon: <Smartphone className="w-5 h-5" />,
+                  color: '#ec4899',
+                  title: 'Works Everywhere',
+                  desc: 'Open it on your phone, laptop, or tablet. It is a web app — no App Store, no updates, no expiry.',
+                },
+              ].map((feature, i) => (
+                <div key={i} className="card p-6 hover:scale-[1.02] transition-all">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${feature.color}1F` }}>
+                    <span style={{ color: feature.color }}>{feature.icon}</span>
+                  </div>
+                  <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{feature.title}</h3>
+                  <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="section pb-32 text-center">
+          <div className="max-w-2xl mx-auto balance-card" style={{ padding: 'var(--space-3xl) var(--space-xl)' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Ready to <span className="italic-accent">take control</span>?
+            </h2>
+            <p className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}>
+              Start tracking your finances today. No credit card, no download, no commitment.
+            </p>
+            <button onClick={login} className="btn-primary px-8 py-3.5 text-base" style={{ background: 'var(--color-paper-0)', color: 'var(--color-ink-0)', borderColor: 'var(--color-paper-0)' }}>
+              Get started free
+            </button>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="section pb-12">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid color-mix(in oklch, var(--color-ink-0) 10%, transparent)', paddingTop: 'var(--space-xl)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
+                <svg className="w-3 h-3" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold" style={{ color: 'var(--color-ink-0)' }}>Finance Flash</span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-ink-3)' }}>Built for personal use. Your data stays in your Google Drive.</p>
+          </div>
+        </footer>
       </div>
     )
   }
