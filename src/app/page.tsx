@@ -552,15 +552,29 @@ export default function DashboardPage() {
           </div>
         </motion.section>
 
-        {/* CTA */}
+        {/* CTA — with parallax scroll effect */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
           className="section pb-32 text-center"
+          style={{ perspective: '1000px' }}
         >
-          <div className="max-w-2xl mx-auto balance-card" style={{ padding: 'var(--space-3xl) var(--space-xl)' }}>
+          <motion.div
+            className="max-w-2xl mx-auto balance-card"
+            style={{ padding: 'var(--space-3xl) var(--space-xl)' }}
+            whileInView={{
+              scale: 1,
+              rotateX: 0,
+            }}
+            initial={{
+              scale: 0.92,
+              rotateX: 8,
+            }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1], delay: 0.1 }}
+          >
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Ready to <span className="italic-accent">take control</span>?
             </h2>
@@ -580,7 +594,7 @@ export default function DashboardPage() {
             >
               Get started free
             </button>
-          </div>
+          </motion.div>
         </motion.section>
 
         {/* Footer */}
