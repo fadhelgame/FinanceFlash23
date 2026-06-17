@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import FlashText from '@/components/FlashText'
+import { VerticalCutReveal } from '@/components/VerticalCutReveal'
 import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
 import NavBar from '@/components/NavBar'
@@ -416,14 +416,34 @@ export default function DashboardPage() {
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 0.61, 0.36, 1] }}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em] mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em]"
               style={{ color: 'var(--color-ink-0)' }}
             >
-              Track your money.<br />
-              <FlashText text="In a flash." className="italic-accent" />
+              <VerticalCutReveal
+                splitBy="words"
+                staggerDuration={0.12}
+                staggerFrom="first"
+                transition={{ type: "spring", stiffness: 190, damping: 22 }}
+                containerClassName="block"
+                wordLevelClassName="inline-flex overflow-hidden pb-1"
+              >
+                Track your money.
+              </VerticalCutReveal>
+              <br />
+              <VerticalCutReveal
+                splitBy="characters"
+                staggerDuration={0.06}
+                staggerFrom="first"
+                transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.5 }}
+                containerClassName="inline-flex"
+                wordLevelClassName="inline-flex overflow-hidden"
+                elementLevelClassName="italic-accent"
+              >
+                In a flash.
+              </VerticalCutReveal>
             </motion.h1>
 
             <motion.p
