@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import SparklesText from '@/components/SparklesText'
+import FlashText from '@/components/FlashText'
 import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
 import NavBar from '@/components/NavBar'
@@ -423,7 +423,7 @@ export default function DashboardPage() {
               style={{ color: 'var(--color-ink-0)' }}
             >
               Track your money.<br />
-              <SparklesText text="In a flash." className="italic-accent font-normal" />
+              <FlashText text="In a flash." className="italic-accent" />
             </motion.h1>
 
             <motion.p
