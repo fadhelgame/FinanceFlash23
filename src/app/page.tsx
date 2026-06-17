@@ -423,7 +423,7 @@ export default function DashboardPage() {
               style={{ color: 'var(--color-ink-0)' }}
             >
               Track your money.<br />
-              <SparklesText><span className="italic-accent">In a flash.</span></SparklesText>
+              <SparklesText text="In a flash." className="italic-accent font-normal" />
             </motion.h1>
 
             <motion.p
