@@ -10,7 +10,7 @@ import { useParams } from 'next/navigation'
 import {
   Banknote, Wallet, ArrowLeftRight, CreditCard, Smartphone, Shield,
   ForkKnife, Car, ShoppingBag, Gamepad2, FileText, Heart, Ellipsis,
-  TrendingUp, TrendingDown, Trash2, ArrowLeft,
+  TrendingUp, TrendingDown, Trash2, ArrowLeft, Download,
 } from 'lucide-react'
 
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
@@ -225,11 +225,67 @@ function EditTxModal({
   )
 }
 
+function formatRupiah(value: number): string {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
+}
+
+function exportCSV(accountName: string, transactions: Transaction[]) {
+  const header = 'Date,Title,Category,Type,Amount'
+  const rows = transactions.map(t =>
+    `${t.date.slice(0, 10)},"${t.title}",${t.category},${t.isIncome ? 'Income' : 'Expense'},${t.isIncome ? t.amount : -t.amount}`
+  )
+  const csv = [header, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${accountName.replace(/\s+/g, '-').toLowerCase()}-transactions.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function exportPDF(accountName: string, transactions: Transaction[], balance: number, income: number, expense: number) {
+  const win = window.open('', '_blank')
+  if (!win) return
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${accountName} — Finance Flash</title>
+<style>
+  body { font-family: Geist, system-ui, sans-serif; padding: 48px; color: #1a1a2e; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  .sub { color: #666; font-size: 11px; margin-bottom: 24px; }
+  .summary { display: flex; gap: 16px; margin-bottom: 32px; }
+  .summary-card { padding: 16px; border-radius: 12px; flex: 1; }
+  .summary-card .label { font-size: 9px; text-transform: uppercase; color: #666; margin: 0 0 4px; }
+  .summary-card .value { font-size: 15px; font-weight: bold; margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { background: #1a1a2e; color: white; padding: 8px 14px; text-align: left; font-size: 9px; text-transform: uppercase; }
+  td { padding: 8px 14px; border-bottom: 1px solid #eee; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .green { color: #22c55e; }
+  .red { color: #ef4444; }
+  .footer { margin-top: 24px; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 16px; }
+</style></head><body>
+<h1>${accountName}</h1>
+<p class="sub">Finance Flash · Generated ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+<div class="summary">
+  <div class="summary-card" style="background:#eef2ff;"><p class="label">Balance</p><p class="value">${formatRupiah(balance)}</p></div>
+  <div class="summary-card" style="background:#f0fdf4;"><p class="label">Income</p><p class="value green">${formatRupiah(income)}</p></div>
+  <div class="summary-card" style="background:#fef2f2;"><p class="label">Expense</p><p class="value red">${formatRupiah(expense)}</p></div>
+</div>
+<table><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th></tr>
+${transactions.map(t => `<tr><td>${new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td><td>${t.title}</td><td>${t.category}</td><td class="${t.isIncome ? 'green' : 'red'}">${t.isIncome ? '+' : '-'}${formatRupiah(t.amount)}</td></tr>`).join('')}
+</table>
+<p class="footer">${transactions.length} transactions · Balance: ${formatRupiah(balance)}</p>
+</body></html>`)
+  win.document.close()
+  win.print()
+}
+
 export default function AccountDetailPage() {
   const params = useParams()
   const { state, dispatch } = useFinanceStore()
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showExport, setShowExport] = useState(false)
 
   // Next.js 27: params are Promises — we resolve via useEffect
   const [accountId, setAccountId] = useState<string | null>(null)
@@ -290,11 +346,48 @@ export default function AccountDetailPage() {
       <NavBar />
 
       <main className="section pt-20">
-        {/* Back link */}
-        <Link href="/accounts" className="inline-flex items-center gap-1.5 mb-4 btn-ghost px-3 py-1.5 text-sm">
-          <ArrowLeft className="w-4 h-4" />
-          All Accounts
-        </Link>
+        {/* Back link + Export */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/accounts" className="inline-flex items-center gap-1.5 btn-ghost px-3 py-1.5 text-sm">
+            <ArrowLeft className="w-4 h-4" />
+            All Accounts
+          </Link>
+          {accountTransactions.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowExport(!showExport)}
+                className="btn-ghost px-3 py-1.5 text-sm"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              {showExport && (
+                <>
+                  <div className="absolute right-0 top-full mt-1 card p-1.5 min-w-[140px] z-10" style={{ background: 'var(--color-paper-0)' }}>
+                    <button
+                      onClick={() => { exportCSV(account.name, accountTransactions); setShowExport(false) }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm transition-all"
+                      style={{ color: 'var(--color-ink-0)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-paper-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      Export CSV
+                    </button>
+                    <button
+                      onClick={() => { exportPDF(account.name, accountTransactions, balance, income, expense); setShowExport(false) }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm transition-all"
+                      style={{ color: 'var(--color-ink-0)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-paper-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      Export PDF
+                    </button>
+                  </div>
+                  <div className="fixed inset-0 z-0" onClick={() => setShowExport(false)} />
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Account Header Card */}
         <div className="balance-card mb-6">
