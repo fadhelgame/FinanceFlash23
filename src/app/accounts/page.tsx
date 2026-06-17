@@ -4,9 +4,9 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
-import { formatIDR, getAccountBalance, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
+import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
 import type { Account, AccountType } from '@/lib/types'
-import { Banknote, Wallet, ArrowLeftRight, CreditCard, Smartphone, Shield, Plus, ArrowLeft } from 'lucide-react'
+import { Banknote, Wallet, ArrowLeftRight, CreditCard, Smartphone, Shield, Plus, ArrowLeft, Check } from 'lucide-react'
 
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
   Cash: '#22c55e',
@@ -151,9 +151,11 @@ function AddAccountModal({ open, onClose, onSave }: { open: boolean; onClose: ()
 export default function AccountsPage() {
   const { state, dispatch } = useFinanceStore()
   const [showModal, setShowModal] = useState(false)
+  const [tab, setTab] = useState<'active' | 'settled'>('active')
 
-  const accounts = state.accounts
   const transactions = state.transactions
+  const activeAccounts = getActiveAccounts(state.accounts)
+  const settledAccounts = getSettledAccounts(state.accounts)
 
   const handleAdd = (account: Account) => {
     dispatch({ type: 'ADD_ACCOUNT', payload: account })
@@ -174,46 +176,113 @@ export default function AccountsPage() {
           </button>
         </div>
 
-        {accounts.length === 0 ? (
-          <div className="card text-center p-10">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--color-paper-2)' }}>
-              <Wallet className="w-7 h-7" style={{ color: 'var(--color-ink-3)' }} />
-            </div>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>No accounts yet</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-ink-2)' }}>Add your first account to start tracking</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="btn btn-primary"
-            >
-              Add your first account
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {accounts.map(acc => {
-              const balance = getAccountBalance(acc, transactions)
-              const color = ACCOUNT_TYPE_COLORS[acc.type]
-              return (
-                <Link
-                  key={acc.id}
-                  href={`/accounts/${acc.id}`}
-                  className="card flex items-center gap-4 hover:scale-[1.01] transition-all"
+        {/* Tabs */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => setTab('active')}
+            className={tab === 'active' ? 'btn-primary px-4 py-2 text-sm' : 'btn-ghost px-4 py-2 text-sm'}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setTab('settled')}
+            className={tab === 'settled' ? 'btn-primary px-4 py-2 text-sm' : 'btn-ghost px-4 py-2 text-sm'}
+          >
+            Settled Loans
+          </button>
+        </div>
+
+        {tab === 'active' ? (
+          <>
+            {activeAccounts.length === 0 ? (
+              <div className="card text-center p-10">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--color-paper-2)' }}>
+                  <Wallet className="w-7 h-7" style={{ color: 'var(--color-ink-3)' }} />
+                </div>
+                <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>No accounts yet</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--color-ink-2)' }}>Add your first account to start tracking</p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="btn btn-primary"
                 >
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: `${color}1F` }}
-                  >
-                    <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{acc.name}</p>
-                    <p className="mono-label text-xs mt-0.5">{acc.type}</p>
-                  </div>
-                  <p className="text-lg font-bold" style={{ color: 'var(--color-ink-0)' }}>{formatIDR(balance)}</p>
-                </Link>
-              )
-            })}
-          </div>
+                  Add your first account
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {activeAccounts.map(acc => {
+                  const balance = getAccountBalance(acc, transactions)
+                  const color = ACCOUNT_TYPE_COLORS[acc.type]
+                  return (
+                    <Link
+                      key={acc.id}
+                      href={`/accounts/${acc.id}`}
+                      className="card flex items-center gap-4 hover:scale-[1.01] transition-all"
+                    >
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: `${color}1F` }}
+                      >
+                        <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{acc.name}</p>
+                        <p className="mono-label text-xs mt-0.5">{acc.type}</p>
+                      </div>
+                      <p className="text-lg font-bold" style={{ color: 'var(--color-ink-0)' }}>{formatIDR(balance)}</p>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {settledAccounts.length === 0 ? (
+              <div className="card text-center p-10">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--color-paper-2)' }}>
+                  <Check className="w-7 h-7" style={{ color: 'var(--color-success)' }} />
+                </div>
+                <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>No settled loans</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--color-ink-2)' }}>Settled loan accounts will appear here</p>
+                <button
+                  onClick={() => setTab('active')}
+                  className="btn btn-primary"
+                >
+                  View active accounts
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {settledAccounts.map(acc => {
+                  const color = ACCOUNT_TYPE_COLORS[acc.type]
+                  return (
+                    <div
+                      key={acc.id}
+                      className="card flex items-center gap-4 opacity-60"
+                    >
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: `${color}1F` }}
+                      >
+                        <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{acc.name}</p>
+                        <p className="mono-label text-xs mt-0.5">Settled · {new Date(acc.settledAt!).toLocaleDateString('id-ID')}</p>
+                      </div>
+                      <span
+                        className="text-xs mono-label px-2 py-1 rounded-full"
+                        style={{ background: 'color-mix(in oklch, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }}
+                      >
+                        <Check className="w-3 h-3 inline-block mr-1" />Paid
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
       </main>
 

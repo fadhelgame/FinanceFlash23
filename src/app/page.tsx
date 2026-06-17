@@ -11,6 +11,8 @@ import {
   getTotalIncome,
   getTotalExpense,
   getAccountBalance,
+  getActiveAccounts,
+  getSettledAccounts,
   ACCOUNT_ICONS,
   ACCOUNT_TYPES,
   CATEGORIES,
@@ -361,7 +363,7 @@ export default function DashboardPage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showExport, setShowExport] = useState(false)
 
-  const accounts = state.accounts
+  const accounts = getActiveAccounts(state.accounts)
   const transactions = state.transactions
   const recurring = state.recurringTransactions
 
@@ -657,6 +659,19 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Settled Loans */}
+        {(() => {
+          const settled = getSettledAccounts(state.accounts)
+          if (settled.length === 0) return null
+          return (
+            <div className="mt-4 mb-8">
+              <Link href="/accounts" className="text-xs mono-label flex items-center gap-1" style={{ color: 'var(--color-ink-2)' }}>
+                {settled.length} settled loan{settled.length > 1 ? 's' : ''} · View history <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+          )
+        })()}
 
         {/* Recurring Section */}
         <section className="mb-8">

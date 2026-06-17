@@ -50,6 +50,8 @@ export interface Account {
   name: string;
   type: AccountType;
   initialBalance: number;
+  isSettled?: boolean;
+  settledAt?: string;
   createdAt: string;
 }
 
@@ -172,4 +174,12 @@ export function processRecurring(
 
 export function generateId(): string {
   return crypto.randomUUID();
+}
+
+export function getActiveAccounts(accounts: Account[]): Account[] {
+  return accounts.filter(a => !a.isSettled);
+}
+
+export function getSettledAccounts(accounts: Account[]): Account[] {
+  return accounts.filter(a => a.isSettled);
 }

@@ -10,7 +10,7 @@ import { useParams } from 'next/navigation'
 import {
   Banknote, Wallet, ArrowLeftRight, CreditCard, Smartphone, Shield,
   ForkKnife, Car, ShoppingBag, Gamepad2, FileText, Heart, Ellipsis,
-  TrendingUp, TrendingDown, Trash2, ArrowLeft, Download,
+  TrendingUp, TrendingDown, Trash2, ArrowLeft, Download, Check,
 } from 'lucide-react'
 
 const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
@@ -425,6 +425,28 @@ export default function AccountDetailPage() {
             <p className="text-lg font-bold text-expense">{formatIDR(expense)}</p>
           </div>
         </div>
+
+        {/* Mark as Settled for Loan accounts */}
+        {account.type === 'Loan' && !account.isSettled && (
+          <div className="card mb-6" style={{ borderColor: 'color-mix(in oklch, var(--color-success) 30%, transparent)', background: 'color-mix(in oklch, var(--color-success) 5%, transparent)' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--color-ink-0)' }}>Loan settled?</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-ink-2)' }}>Mark this loan as fully paid. It will move to Loan History.</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (confirm('Mark this loan as settled? It will move to Loan History.')) {
+                    dispatch({ type: 'UPDATE_ACCOUNT', payload: { ...account, isSettled: true, settledAt: new Date().toISOString() } })
+                  }
+                }}
+                className="btn-primary px-4 py-2 text-sm"
+              >
+                <Check className="w-4 h-4" /> Settled
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Transactions */}
         <section>
