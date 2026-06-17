@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
 import NavBar from '@/components/NavBar'
@@ -402,19 +403,45 @@ export default function DashboardPage() {
         {/* Hero */}
         <section className="section pt-32 sm:pt-40 pb-20 sm:pb-32 text-center relative">
           <div className="max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs mono-label mb-8" style={{ background: 'var(--color-accent-tint)', color: 'var(--color-accent)', border: '1px solid color-mix(in oklch, var(--color-accent) 20%, transparent)' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs mono-label mb-8"
+              style={{ background: 'var(--color-accent-tint)', color: 'var(--color-accent)', border: '1px solid color-mix(in oklch, var(--color-accent) 20%, transparent)' }}
+            >
               <span className="live-dot" />
               Your data, your control
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em] mb-6" style={{ color: 'var(--color-ink-0)' }}>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 0.61, 0.36, 1] }}
+              className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em] mb-6"
+              style={{ color: 'var(--color-ink-0)' }}
+            >
               Track your money.<br />
               <span className="italic-accent">In a flash.</span>
-            </h1>
-            <p className="text-lg sm:text-xl max-w-xl mx-auto mb-10" style={{ color: 'var(--color-ink-1)' }}>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
+              className="text-lg sm:text-xl max-w-xl mx-auto mb-10"
+              style={{ color: 'var(--color-ink-1)' }}
+            >
               Finance Flash is a personal finance tracker that works on any device. 
               No installation, no syncing, no headaches. Your data stays in your Google Drive.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
               <button onClick={login} className="btn-primary px-8 py-3.5 text-base flex items-center gap-2">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -424,23 +451,47 @@ export default function DashboardPage() {
                 </svg>
                 Sign in with Google
               </button>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 className="btn-ghost px-8 py-3.5 text-base"
               >
                 Learn more
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </div>
         </section>
 
         {/* Features */}
-        <section id="features" className="section pb-20 sm:pb-32">
+        <motion.section
+          id="features"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.6 }}
+          className="section pb-20 sm:pb-32"
+        >
           <div className="max-w-5xl mx-auto">
-            <p className="mono-label text-center mb-3">FEATURES</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16" style={{ color: 'var(--color-ink-0)' }}>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mono-label text-center mb-3"
+            >
+              FEATURES
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-3xl sm:text-4xl font-bold text-center mb-16"
+              style={{ color: 'var(--color-ink-0)' }}
+            >
               Everything you need to <span className="italic-accent">stay on top</span>
-            </h2>
+            </motion.h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
@@ -480,20 +531,35 @@ export default function DashboardPage() {
                   desc: 'Open it on your phone, laptop, or tablet. It is a web app — no App Store, no updates, no expiry.',
                 },
               ].map((feature, i) => (
-                <div key={i} className="card p-6 hover:scale-[1.02] transition-all">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.5, delay: i * 0.08, ease: [0.22, 0.61, 0.36, 1] }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="card p-6"
+                  style={{ cursor: 'default' }}
+                >
                   <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${feature.color}1F` }}>
                     <span style={{ color: feature.color }}>{feature.icon}</span>
                   </div>
                   <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{feature.title}</h3>
                   <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{feature.desc}</p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* CTA */}
-        <section className="section pb-32 text-center">
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+          className="section pb-32 text-center"
+        >
           <div className="max-w-2xl mx-auto balance-card" style={{ padding: 'var(--space-3xl) var(--space-xl)' }}>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Ready to <span className="italic-accent">take control</span>?
@@ -515,10 +581,16 @@ export default function DashboardPage() {
               Get started free
             </button>
           </div>
-        </section>
+        </motion.section>
 
         {/* Footer */}
-        <footer className="section pb-12">
+        <motion.footer
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="section pb-12"
+        >
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid color-mix(in oklch, var(--color-ink-0) 10%, transparent)', paddingTop: 'var(--space-xl)' }}>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
@@ -534,7 +606,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-xs" style={{ color: 'var(--color-ink-3)' }}>Built for personal use. Your data stays in your Google Drive.</p>
         </div>
-        </footer>
+        </motion.footer>
       </div>
     )
   }
