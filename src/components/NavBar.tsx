@@ -9,7 +9,7 @@ import { LogOut, Menu, X, LogIn, LayoutDashboard, Wallet, ArrowLeftRight, Refres
 const links = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/accounts', label: 'Accounts', icon: Wallet },
-  { href: '/transactions', label: 'Txns', icon: ArrowLeftRight },
+  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/recurring', label: 'Recurring', icon: RefreshCw },
 ]
 

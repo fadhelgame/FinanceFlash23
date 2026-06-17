@@ -11,6 +11,19 @@ import {
   TrendingUp, Plus, Trash2, Search, ArrowLeft,
 } from 'lucide-react'
 
+type DateFilter = 'all' | 'this-month' | 'last-month' | 'custom'
+
+const DATE_FILTERS: { value: DateFilter; label: string }[] = [
+  { value: 'all', label: 'All Time' },
+  { value: 'this-month', label: 'This Month' },
+  { value: 'last-month', label: 'Last Month' },
+  { value: 'custom', label: 'Custom' },
+]
+
+function formatMonth(d: Date): string {
+  return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+}
+
 const CATEGORY_COLORS: Record<TransactionCategory, string> = {
   Food: '#f97316',
   Transport: '#3b82f6',
@@ -158,6 +171,9 @@ export default function TransactionsPage() {
   const { state, dispatch } = useFinanceStore()
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState<TransactionCategory | null>(null)
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -172,8 +188,33 @@ export default function TransactionsPage() {
     if (filterCat) {
       list = list.filter(t => t.category === filterCat)
     }
+    // Date filter
+    const now = new Date()
+    const thisMonth = now.getMonth()
+    const thisYear = now.getFullYear()
+    if (dateFilter === 'this-month') {
+      list = list.filter(t => {
+        const d = new Date(t.date)
+        return d.getMonth() === thisMonth && d.getFullYear() === thisYear
+      })
+    } else if (dateFilter === 'last-month') {
+      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1
+      const lastYear = thisMonth === 0 ? thisYear - 1 : thisYear
+      list = list.filter(t => {
+        const d = new Date(t.date)
+        return d.getMonth() === lastMonth && d.getFullYear() === lastYear
+      })
+    } else if (dateFilter === 'custom' && customStart && customEnd) {
+      const start = new Date(customStart)
+      const end = new Date(customEnd)
+      end.setHours(23, 59, 59, 999)
+      list = list.filter(t => {
+        const d = new Date(t.date)
+        return d >= start && d <= end
+      })
+    }
     return list
-  }, [state.transactions, search, filterCat])
+  }, [state.transactions, search, filterCat, dateFilter, customStart, customEnd])
 
   /* ---------- Add Tx Modal (inline, simplified) ---------- */
   const [addForm, setAddForm] = useState({
@@ -222,7 +263,7 @@ export default function TransactionsPage() {
         <h1 className="section-title mb-6">Transactions</h1>
 
         {/* Search */}
-        <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 mb-4" style={{ background: 'var(--color-paper-2)' }}>
+        <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 mb-3" style={{ background: 'var(--color-paper-2)' }}>
           <Search className="w-4 h-4" style={{ color: 'var(--color-ink-3)' }} />
           <input
             type="text"
@@ -232,6 +273,51 @@ export default function TransactionsPage() {
             className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--color-ink-0)' }}
           />
         </div>
+
+        {/* Date filter pills */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-none">
+          {DATE_FILTERS.map(df => (
+            <button
+              key={df.value}
+              onClick={() => setDateFilter(df.value)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                dateFilter === df.value ? 'btn-primary text-xs py-1.5 px-4' : ''
+              }`}
+              style={dateFilter === df.value ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}
+            >
+              {df.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom date range */}
+        {dateFilter === 'custom' && (
+          <div className="flex items-center gap-2 mb-3">
+            <input
+              type="date"
+              value={customStart}
+              onChange={e => setCustomStart(e.target.value)}
+              className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
+              style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }}
+            />
+            <span className="text-xs" style={{ color: 'var(--color-ink-3)' }}>to</span>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={e => setCustomEnd(e.target.value)}
+              className="flex-1 rounded-xl px-3 py-2 text-xs outline-none"
+              style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }}
+            />
+          </div>
+        )}
+
+        {/* Filter summary */}
+        {dateFilter !== 'all' && (
+          <p className="mono-label text-[10px] mb-3">
+            Showing: {dateFilter === 'this-month' ? formatMonth(new Date()) : dateFilter === 'last-month' ? formatMonth(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)) : `${customStart || '?'} — ${customEnd || '?'}`}
+            {' · '}{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+          </p>
+        )}
 
         {/* Category filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-none">
