@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { VerticalCutReveal } from '@/components/VerticalCutReveal'
 import CinematicText from '@/components/CinematicText'
 import Link from 'next/link'
@@ -10,11 +11,117 @@ import {
   RefreshCw,
   ArrowDownLeft,
   TrendingDown,
+  ChevronLeft,
   ChevronRight,
   Smartphone,
 } from 'lucide-react'
 
 export default function LandingPage({ login }: { login: () => Promise<void> }) {
+  // ── Features Carousel State ──
+  const featuresData = [
+    {
+      icon: <TrendingUp className="w-5 h-5" />,
+      color: '#22c55e',
+      title: 'Track Income & Expenses',
+      desc: 'Log every transaction in seconds. Categorise your spending — Food, Transport, Bills, and more. Know where your money goes.',
+    },
+    {
+      icon: <Wallet className="w-5 h-5" />,
+      color: '#3b82f6',
+      title: 'Multiple Accounts',
+      desc: 'Cash, Bank, E-Wallet, Credit Card, Savings — manage them all in one place. Each account keeps its own balance.',
+    },
+    {
+      icon: <RefreshCw className="w-5 h-5" />,
+      color: '#a855f7',
+      title: 'Recurring Transactions',
+      desc: 'Set up monthly bills, subscriptions, and salary. Finance Flash auto-generates them so you never miss a thing.',
+    },
+    {
+      icon: <ArrowDownLeft className="w-5 h-5" />,
+      color: '#14b8a6',
+      title: 'Export CSV & PDF',
+      desc: 'Export any account or your full ledger. Perfect for tax season, budgeting reviews, or sharing with your partner.',
+    },
+    {
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+      color: '#f97316',
+      title: 'Google Drive Backup',
+      desc: 'All your data syncs to your own Google Drive. No servers, no strangers — just you and your spreadsheet-in-the-sky.',
+    },
+    {
+      icon: <Smartphone className="w-5 h-5" />,
+      color: '#ec4899',
+      title: 'Works Everywhere',
+      desc: 'Open it on your phone, laptop, or tablet. It is a web app — no App Store, no updates, no expiry.',
+    },
+  ]
+
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
+  const totalSlides = featuresData.length
+
+  const goTo = useCallback((index: number) => {
+    const newIndex = ((index % totalSlides) + totalSlides) % totalSlides
+    setDirection(newIndex > currentIndex ? 1 : -1)
+    setCurrentIndex(newIndex)
+  }, [currentIndex, totalSlides])
+
+  const goNext = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex])
+  const goPrev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex])
+
+  // Auto-rotate
+  useEffect(() => {
+    if (isPaused) {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      return
+    }
+    intervalRef.current = setInterval(() => {
+      setDirection(1)
+      setCurrentIndex(prev => (prev + 1) % totalSlides)
+    }, 4000)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [isPaused, totalSlides])
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    setIsPaused(true)
+  }
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current
+    const threshold = 50
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) goNext()
+      else goPrev()
+    }
+    setTimeout(() => setIsPaused(false), 6000)
+  }
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? -300 : 300,
+      opacity: 0,
+    }),
+  }
+
   return (
     <div className="min-h-screen page-grid">
 
@@ -192,45 +299,9 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             Everything you <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>need</span><br />
             to stay on top
           </motion.h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: <TrendingUp className="w-5 h-5" />,
-                color: '#22c55e',
-                title: 'Track Income & Expenses',
-                desc: 'Log every transaction in seconds. Categorise your spending — Food, Transport, Bills, and more. Know where your money goes.',
-              },
-              {
-                icon: <Wallet className="w-5 h-5" />,
-                color: '#3b82f6',
-                title: 'Multiple Accounts',
-                desc: 'Cash, Bank, E-Wallet, Credit Card, Savings — manage them all in one place. Each account keeps its own balance.',
-              },
-              {
-                icon: <RefreshCw className="w-5 h-5" />,
-                color: '#a855f7',
-                title: 'Recurring Transactions',
-                desc: 'Set up monthly bills, subscriptions, and salary. Finance Flash auto-generates them so you never miss a thing.',
-              },
-              {
-                icon: <ArrowDownLeft className="w-5 h-5" />,
-                color: '#14b8a6',
-                title: 'Export CSV & PDF',
-                desc: 'Export any account or your full ledger. Perfect for tax season, budgeting reviews, or sharing with your partner.',
-              },
-              {
-                icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-                color: '#f97316',
-                title: 'Google Drive Backup',
-                desc: 'All your data syncs to your own Google Drive. No servers, no strangers — just you and your spreadsheet-in-the-sky.',
-              },
-              {
-                icon: <Smartphone className="w-5 h-5" />,
-                color: '#ec4899',
-                title: 'Works Everywhere',
-                desc: 'Open it on your phone, laptop, or tablet. It is a web app — no App Store, no updates, no expiry.',
-              },
-            ].map((feature, i) => (
+          {/* Desktop: Grid */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuresData.map((feature, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -248,6 +319,70 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{feature.desc}</p>
               </motion.div>
             ))}
+          </div>
+
+          {/* Mobile: Carousel */}
+          <div className="sm:hidden relative overflow-hidden" style={{ minHeight: '280px' }}>
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{ height: '100%' }}
+            >
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.3 } }}
+                  className="card p-6"
+                  style={{ cursor: 'default', touchAction: 'pan-y' }}
+                >
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${featuresData[currentIndex].color}1F` }}>
+                    <span style={{ color: featuresData[currentIndex].color }}>{featuresData[currentIndex].icon}</span>
+                  </div>
+                  <h3 className="text-[22px] font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{featuresData[currentIndex].title}</h3>
+                  <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{featuresData[currentIndex].desc}</p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Dots indicator */}
+            <div className="flex justify-center gap-2 mt-6">
+              {featuresData.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setDirection(i > currentIndex ? 1 : -1); setCurrentIndex(i); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
+                  className="w-2 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    background: i === currentIndex ? 'var(--color-accent)' : 'color-mix(in oklch, var(--color-ink-0) 20%, transparent)',
+                    width: i === currentIndex ? '24px' : '8px',
+                  }}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Prev/Next buttons */}
+            <button
+              onClick={() => { goPrev(); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-opacity hover:opacity-100 opacity-70"
+              style={{ background: 'color-mix(in oklch, var(--color-paper-0) 90%, transparent)', color: 'var(--color-ink-0)' }}
+              aria-label="Previous feature"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => { goNext(); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-opacity hover:opacity-100 opacity-70"
+              style={{ background: 'color-mix(in oklch, var(--color-paper-0) 90%, transparent)', color: 'var(--color-ink-0)' }}
+              aria-label="Next feature"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </motion.section>
