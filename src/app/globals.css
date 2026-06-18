@@ -131,6 +131,25 @@ button, input, select { font: inherit; color: inherit; }
   padding: var(--space-2xl) var(--space-xl);
   box-shadow: rgba(255,255,255,0.08) 0px 1px 0px inset, rgba(0,10,60,0.5) 0px 24px 60px -28px;
 }
+.cta-card-grid {
+  position: relative;
+  overflow: hidden;
+}
+.cta-card-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, oklch(100% 0 0 / 0.06) 1px, transparent 0);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(70% 60% at 50% 50%, black 40%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+.cta-card-grid > * {
+  position: relative;
+  z-index: 1;
+}
 
 /* Live indicator dot */
 .live-dot {

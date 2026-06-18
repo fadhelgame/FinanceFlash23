@@ -674,7 +674,7 @@ export default function DashboardPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="mono-label text-center mb-3"
+              className="mono-label mb-3"
             >
               FEATURES
             </motion.p>
@@ -683,10 +683,10 @@ export default function DashboardPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-3xl sm:text-4xl lg:text-[56px] font-semibold leading-[1.05] -tracking-[0.03em] text-center mb-16"
+              className="text-3xl sm:text-4xl lg:text-[56px] font-semibold leading-[1.05] -tracking-[0.03em] mb-16"
               style={{ color: 'var(--color-ink-0)' }}
             >
-              Everything you need to <span className="italic-accent">stay on top</span>
+              Everything you <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>need</span> to stay on top
             </motion.h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
@@ -758,8 +758,8 @@ export default function DashboardPage() {
           style={{ perspective: '1000px' }}
         >
           <motion.div
-            className="max-w-2xl mx-auto balance-card"
-            style={{ padding: 'var(--space-3xl) var(--space-xl)' }}
+            className="mx-auto balance-card cta-card-grid"
+            style={{ padding: 'var(--space-4xl) var(--space-2xl)' }}
             whileInView={{
               scale: 1,
               rotateX: 0,
@@ -771,8 +771,8 @@ export default function DashboardPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1], delay: 0.1 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Ready to <span className="italic-accent">take control</span>?
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              Ready to <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>take control</span>?
             </h2>
             <p className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}>
               Start tracking your finances today. No credit card, no download, no commitment.
