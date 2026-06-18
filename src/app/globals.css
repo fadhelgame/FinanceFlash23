@@ -45,7 +45,7 @@ button, input, select { font: inherit; color: inherit; }
   background-size: 56px 56px, 100% 100%;
   mask-image: radial-gradient(85% 65% at 50% 35%, black 30%, transparent 72%);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   animation: grid-drift 120s linear infinite;
 }
 @keyframes grid-drift {
@@ -53,7 +53,7 @@ button, input, select { font: inherit; color: inherit; }
   100% { background-position: 56px 56px, 0 0; }
 }
 
-/* Ledger accent lines — vertical indigo every 4 dots */
+/* Ledger accent lines — vertical indigo every 4 dots (desktop only) */
 .page-grid::after {
   content: "";
   position: fixed;
@@ -69,7 +69,12 @@ button, input, select { font: inherit; color: inherit; }
     );
   mask-image: radial-gradient(70% 55% at 50% 35%, black 25%, transparent 75%);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
+}
+
+/* Hide ledger lines on mobile — too few lines visible */
+@media (max-width: 640px) {
+  .page-grid::after { display: none; }
 }
 
 /* Floating pill nav */
