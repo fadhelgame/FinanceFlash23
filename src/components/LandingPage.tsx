@@ -93,41 +93,41 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 staggerDuration={0.12}
                 staggerFrom="first"
                 transition={{ type: "spring", stiffness: 190, damping: 22 }}
-                containerClassName="block"
                 wordLevelClassName="inline-flex overflow-hidden"
               >
                 Track your
-              </VerticalCutReveal>
-              <span className="sm:hidden block h-0 leading-none" />
+              </VerticalCutReveal>{' '}
+              <span className="sm:hidden block" />
               <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
                 staggerFrom="first"
                 transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.5 }}
-                containerClassName="inline-flex"
                 wordLevelClassName="inline-flex overflow-hidden"
               >
                 money in
-              </VerticalCutReveal>
-              <span className="sm:hidden block h-0 leading-none" />
-              <span className="inline-flex items-baseline gap-1">
-                <span
-                  className="inline-flex"
-                  style={{ color: 'var(--color-ink-0)' }}
-                >a </span>
-                <VerticalCutReveal
+              </VerticalCutReveal>{' '}
+              <span className="sm:hidden block" />
+              <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
                 staggerFrom="first"
                 transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.7 }}
-                containerClassName="inline-flex"
+                wordLevelClassName="inline-flex overflow-hidden"
+              >
+                a
+              </VerticalCutReveal>{' '}
+              <VerticalCutReveal
+                splitBy="characters"
+                staggerDuration={0.06}
+                staggerFrom="first"
+                transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.7 }}
                 wordLevelClassName="inline-flex overflow-hidden"
                 elementLevelClassName="italic-accent"
                 style={{ color: 'var(--color-accent)' }}
               >
                 flash
               </VerticalCutReveal>
-              </span>
             </motion.h1>
 
             <motion.p
