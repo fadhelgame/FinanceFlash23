@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/callback'
 
 export async function GET(request: NextRequest) {
   try {
     const code = request.nextUrl.searchParams.get('code')
+    const origin = new URL(request.url).origin
+    const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${origin}/api/auth/callback`
 
     if (!code) {
       return NextResponse.json({ error: 'Missing authorization code' }, { status: 400 })
