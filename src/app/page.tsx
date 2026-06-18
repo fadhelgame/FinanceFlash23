@@ -668,7 +668,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.6 }}
           className="section py-12 sm:py-20 lg:py-[48px]"
         >
-          <div className="max-w-5xl mx-auto">
+          <div>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -801,7 +801,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="section py-20 lg:pt-20 lg:pb-12"
         >
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid color-mix(in oklch, var(--color-ink-0) 10%, transparent)', paddingTop: 'var(--space-xl)' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid color-mix(in oklch, var(--color-ink-0) 10%, transparent)', paddingTop: 'var(--space-xl)' }}>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent)' }}>
                 <svg className="w-3 h-3" style={{ color: 'var(--color-paper-0)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
