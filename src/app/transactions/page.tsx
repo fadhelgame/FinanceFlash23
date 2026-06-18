@@ -4,11 +4,11 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
-import { formatIDR, CATEGORIES, generateId } from '@/lib/types'
+import { formatIDR, CATEGORIES, generateId, getActiveAccounts } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
 import {
   ForkKnife, Car, ShoppingBag, Gamepad2, FileText, Heart, Ellipsis,
-  TrendingUp, Plus, Trash2, Search, ArrowLeft,
+  TrendingUp, Plus, Trash2, Search, ArrowLeft, CheckSquare, Square,
 } from 'lucide-react'
 
 type DateFilter = 'all' | 'this-month' | 'last-month' | 'custom'
@@ -177,6 +177,11 @@ export default function TransactionsPage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set())
+  const [assignAccountId, setAssignAccountId] = useState('')
+
+  const accounts = getActiveAccounts(state.accounts)
 
   const filtered = useMemo(() => {
     let list = [...state.transactions]
@@ -260,7 +265,24 @@ export default function TransactionsPage() {
       <NavBar />
 
       <main className="section pt-20">
-        <h1 className="section-title mb-6">Transactions</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="section-title" style={{ margin: 0 }}>Transactions</h1>
+          {selectMode ? (
+            <button
+              onClick={() => { setSelectMode(false); setSelectedTxIds(new Set()) }}
+              className="btn btn-ghost text-sm px-3 py-1.5"
+            >
+              Cancel
+            </button>
+          ) : (
+            <button
+              onClick={() => setSelectMode(true)}
+              className="btn btn-ghost text-sm px-3 py-1.5"
+            >
+              Manage
+            </button>
+          )}
+        </div>
 
         {/* Search */}
         <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 mb-3" style={{ background: 'var(--color-paper-2)' }}>
@@ -355,7 +377,43 @@ export default function TransactionsPage() {
           <div className="space-y-2">
             {filtered.map(tx => {
               const color = CATEGORY_COLORS[tx.category]
-              return (
+              const accountName = accounts.find(a => a.id === tx.accountId)?.name
+              const isSelected = selectedTxIds.has(tx.id)
+              return selectMode ? (
+                <button
+                  key={tx.id}
+                  onClick={() => {
+                    const next = new Set(selectedTxIds)
+                    if (isSelected) next.delete(tx.id)
+                    else next.add(tx.id)
+                    setSelectedTxIds(next)
+                  }}
+                  className="w-full card flex items-center gap-3 hover:scale-[1.01] transition-all text-left"
+                  style={{ padding: 'var(--space-md)', borderColor: isSelected ? 'var(--color-accent)' : undefined, borderWidth: isSelected ? '1.5px' : undefined }}
+                >
+                  <div style={{ color: isSelected ? 'var(--color-accent)' : 'var(--color-ink-3)' }}>
+                    {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                  </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}33` }}>
+                    <CatIcon category={tx.category} className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="mono-label text-[10px]">{tx.category}</span>
+                      <span className="text-[10px]" style={{ color: 'var(--color-ink-3)' }}>{new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                      {accountName ? (
+                        <span className="text-[10px]" style={{ color: 'var(--color-accent)' }}>{accountName}</span>
+                      ) : (
+                        <span className="text-[10px]" style={{ color: 'var(--color-warning)' }}>No account</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
+                    {tx.isIncome ? '+' : '-'}{formatIDR(tx.amount)}
+                  </span>
+                </button>
+              ) : (
                 <button
                   key={tx.id}
                   onClick={() => openEdit(tx)}
@@ -370,6 +428,11 @@ export default function TransactionsPage() {
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="mono-label text-[10px]">{tx.category}</span>
                       <span className="text-[10px]" style={{ color: 'var(--color-ink-3)' }}>{new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                      {accountName ? (
+                        <span className="text-[10px]" style={{ color: 'var(--color-accent)' }}>{accountName}</span>
+                      ) : (
+                        <span className="text-[10px]" style={{ color: 'var(--color-warning)' }}>No account</span>
+                      )}
                     </div>
                   </div>
                   <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
@@ -378,6 +441,45 @@ export default function TransactionsPage() {
                 </button>
               )
             })}
+          </div>
+        )}
+
+        {/* Batch-assign bar */}
+        {selectMode && selectedTxIds.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 card flex items-center gap-3 px-5 py-3 shadow-lg" style={{ minWidth: '320px' }}>
+            <span className="text-sm font-medium shrink-0" style={{ color: 'var(--color-ink-0)' }}>
+              {selectedTxIds.size} selected
+            </span>
+            <select
+              value={assignAccountId}
+              onChange={e => setAssignAccountId(e.target.value)}
+              className="flex-1 text-sm rounded-lg px-3 py-1.5"
+              style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)', border: '1px solid color-mix(in oklch, var(--color-ink-0) 12%, transparent)' }}
+            >
+              <option value="">— Pick account —</option>
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                if (!assignAccountId) { alert('Please select an account.'); return }
+                const count = selectedTxIds.size
+                selectedTxIds.forEach(id => {
+                  const tx = state.transactions.find(t => t.id === id)
+                  if (tx) {
+                    dispatch({ type: 'UPDATE_TRANSACTION', payload: { ...tx, accountId: assignAccountId } })
+                  }
+                })
+                setSelectedTxIds(new Set())
+                setAssignAccountId('')
+                setSelectMode(false)
+                alert(`Moved ${count} transaction${count > 1 ? 's' : ''} to ${accounts.find(a => a.id === assignAccountId)?.name || 'account'}.`)
+              }}
+              className="btn-primary text-sm px-4 py-1.5 shrink-0"
+            >
+              Assign
+            </button>
           </div>
         )}
       </main>
