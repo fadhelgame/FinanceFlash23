@@ -20,7 +20,7 @@ import {
   CATEGORIES,
   generateId,
 } from '@/lib/types'
-import type { Account, Transaction, TransactionCategory, AccountType } from '@/lib/types'
+import type { Account, Transaction, RecurringTransaction, TransactionCategory, AccountType } from '@/lib/types'
 
 import {
   Banknote,
@@ -356,8 +356,8 @@ function exportPDF(transactions: Transaction[]) {
 
 /* ---------- JSON Export / Import ---------- */
 
-function exportJSON(state: FinanceState) {
-  const data: FinanceData = {
+function exportJSON(state: { accounts: Account[]; transactions: Transaction[]; recurringTransactions: RecurringTransaction[] }) {
+  const data = {
     accounts: state.accounts,
     transactions: state.transactions,
     recurringTransactions: state.recurringTransactions,
@@ -378,7 +378,7 @@ function importJSON(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.
   const reader = new FileReader()
   reader.onload = (e) => {
     try {
-      const data: FinanceData = JSON.parse(e.target?.result as string)
+      const data = JSON.parse(e.target?.result as string)
       if (!data.accounts && !data.transactions && !data.recurringTransactions) {
         alert('Invalid backup file. Expected Finance Flash JSON backup.')
         return
