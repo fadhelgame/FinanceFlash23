@@ -1060,6 +1060,7 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {latestTx.map(tx => {
                 const isSelected = selectedTxIds.has(tx.id)
+                const accountName = accounts.find(a => a.id === tx.accountId)?.name
                 return selectMode ? (
                   <button
                     key={tx.id}
@@ -1085,6 +1086,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
                       <p className="mono-label text-[10px]">
                         {tx.category} &middot; {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                        {accountName ? <>&middot; {accountName}</> : <>&middot; <span style={{ color: 'var(--color-warning)' }}>No account</span></>}
                       </p>
                     </div>
                     <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
@@ -1108,6 +1110,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
                       <p className="mono-label text-[10px]">
                         {tx.category} &middot; {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                        {accountName ? <>&middot; {accountName}</> : <>&middot; <span style={{ color: 'var(--color-warning)' }}>No account</span></>}
                       </p>
                     </div>
                     <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
