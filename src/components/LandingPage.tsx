@@ -1,7 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { VerticalCutReveal } from '@/components/VerticalCutReveal'
 import CinematicText from '@/components/CinematicText'
 import Link from 'next/link'
@@ -10,11 +9,16 @@ import {
   TrendingUp,
   RefreshCw,
   ArrowDownLeft,
-  TrendingDown,
-  ChevronLeft,
-  ChevronRight,
   Smartphone,
 } from 'lucide-react'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  CarouselDots,
+} from '@/components/ui/carousel'
 
 export default function LandingPage({ login }: { login: () => Promise<void> }) {
   // ── Features Carousel State ──
@@ -56,71 +60,6 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
       desc: 'Open it on your phone, laptop, or tablet. It is a web app — no App Store, no updates, no expiry.',
     },
   ]
-
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [direction, setDirection] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
-  const totalSlides = featuresData.length
-
-  const goTo = useCallback((index: number) => {
-    const newIndex = ((index % totalSlides) + totalSlides) % totalSlides
-    setDirection(newIndex > currentIndex ? 1 : -1)
-    setCurrentIndex(newIndex)
-  }, [currentIndex, totalSlides])
-
-  const goNext = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex])
-  const goPrev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex])
-
-  // Auto-rotate
-  useEffect(() => {
-    if (isPaused) {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      return
-    }
-    intervalRef.current = setInterval(() => {
-      setDirection(1)
-      setCurrentIndex(prev => (prev + 1) % totalSlides)
-    }, 4000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [isPaused, totalSlides])
-
-  // Touch handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    setIsPaused(true)
-  }
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX
-  }
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current
-    const threshold = 50
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0) goNext()
-      else goPrev()
-    }
-    setTimeout(() => setIsPaused(false), 6000)
-  }
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? -300 : 300,
-      opacity: 0,
-    }),
-  }
 
   return (
     <div className="min-h-screen page-grid">
@@ -321,68 +260,34 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             ))}
           </div>
 
-          {/* Mobile: Carousel */}
-          <div className="sm:hidden relative overflow-hidden" style={{ minHeight: '280px' }}>
-            <div
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{ height: '100%' }}
-            >
-              <AnimatePresence initial={false} custom={direction} mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.3 } }}
-                  className="card p-4 mx-8"
-                  style={{ cursor: 'default', touchAction: 'pan-y' }}
-                >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: `${featuresData[currentIndex].color}1F` }}>
-                    <span style={{ color: featuresData[currentIndex].color }}>{featuresData[currentIndex].icon}</span>
-                  </div>
-                  <h3 className="text-[16px] font-semibold mb-1" style={{ color: 'var(--color-ink-0)' }}>{featuresData[currentIndex].title}</h3>
-                  <p className="text-xs line-clamp-2" style={{ color: 'var(--color-ink-1)' }}>{featuresData[currentIndex].desc}</p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Dots indicator */}
-            <div className="flex justify-center gap-2 mt-6">
-              {featuresData.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setDirection(i > currentIndex ? 1 : -1); setCurrentIndex(i); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
-                  className="w-2 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    background: i === currentIndex ? 'var(--color-accent)' : 'color-mix(in oklch, var(--color-ink-0) 20%, transparent)',
-                    width: i === currentIndex ? '24px' : '8px',
-                  }}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-
-            {/* Prev/Next buttons */}
-            <button
-              onClick={() => { goPrev(); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-opacity hover:opacity-100 opacity-70"
-              style={{ background: 'color-mix(in oklch, var(--color-paper-0) 90%, transparent)', color: 'var(--color-ink-0)' }}
-              aria-label="Previous feature"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => { goNext(); setIsPaused(true); setTimeout(() => setIsPaused(false), 6000) }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-opacity hover:opacity-100 opacity-70"
-              style={{ background: 'color-mix(in oklch, var(--color-paper-0) 90%, transparent)', color: 'var(--color-ink-0)' }}
-              aria-label="Next feature"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          {/* Mobile: Embla Carousel */}
+          <div className="sm:hidden">
+            <Carousel opts={{ align: 'start', loop: false }}>
+              <CarouselContent>
+                {featuresData.map((feature, i) => (
+                  <CarouselItem key={i}>
+                    <div className="card p-4 mx-6">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
+                        style={{ background: `${feature.color}1F` }}
+                      >
+                        <span style={{ color: feature.color }}>{feature.icon}</span>
+                      </div>
+                      <h3 className="text-[16px] font-semibold mb-1" style={{ color: 'var(--color-ink-0)' }}>
+                        {feature.title}
+                      </h3>
+                      <p className="text-xs line-clamp-2" style={{ color: 'var(--color-ink-1)' }}>
+                        {feature.desc}
+                      </p>
+                      {/* Prev/Next buttons overlaid on card */}
+                      <CarouselPrevious />
+                      <CarouselNext />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselDots className="mt-6" />
+            </Carousel>
           </div>
         </div>
       </motion.section>
