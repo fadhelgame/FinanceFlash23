@@ -286,23 +286,6 @@ export default function DashboardView({
                     </svg>
                     Import CSV
                   </button>
-                  <div className="h-px my-1 mx-3" style={{ background: 'color-mix(in oklch, var(--color-warning) 20%, transparent)' }} />
-                  <button
-                    onClick={() => {
-                      setShowExport(false)
-                      if (confirm('⚠️ Delete ALL data?\n\nThis will permanently remove all accounts, transactions, and recurring transactions from your Google Drive. This cannot be undone.\n\nAre you sure?')) {
-                        if (confirm('Really delete everything? Type "yes" to confirm.')) {
-                          dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: new Date().toISOString() } })
-                          setTimeout(() => window.location.reload(), 300)
-                        }
-                      }
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all"
-                    style={{ color: 'var(--color-warning)' }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete All Data
-                  </button>
                 </div>
               </>
             )}
@@ -565,6 +548,27 @@ export default function DashboardView({
               className="btn-primary text-sm px-4 py-1.5 shrink-0"
             >
               Assign
+            </button>
+            <div className="w-px h-6 shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
+            <button
+              onClick={() => {
+                const count = selectedTxIds.size
+                if (confirm(`Delete ${count} transaction${count > 1 ? 's' : ''}?`)) {
+                  selectedTxIds.forEach(id => {
+                    dispatch({ type: 'DELETE_TRANSACTION', payload: id })
+                  })
+                  setSelectedTxIds(new Set())
+                  setAssignAccountId('')
+                  setSelectMode(false)
+                }
+              }}
+              className="text-sm px-4 py-1.5 shrink-0 rounded-xl font-medium transition-all flex items-center gap-1.5"
+              style={{ color: 'var(--color-warning)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in oklch, var(--color-warning) 10%, transparent)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
             </button>
           </div>
         )}
