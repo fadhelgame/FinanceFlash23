@@ -565,7 +565,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
-                className="text-lg sm:text-xl max-w-lg mb-10"
+                className="text-lg max-w-lg mb-10"
                 style={{ color: 'var(--color-ink-1)' }}
               >
                 Finance Flash is a personal finance tracker that works on any device. 
