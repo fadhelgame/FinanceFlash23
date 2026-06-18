@@ -556,8 +556,8 @@ export default function DashboardPage() {
                   containerClassName="inline-flex"
                   wordLevelClassName="inline-flex overflow-hidden"
                 >
-                  In a{'\u00A0'}
-                </VerticalCutReveal>
+                  In a
+                </VerticalCutReveal>{' '}
                 <VerticalCutReveal
                   splitBy="characters"
                   staggerDuration={0.06}
@@ -568,7 +568,7 @@ export default function DashboardPage() {
                   elementLevelClassName="italic-accent"
                   style={{ color: 'var(--color-accent)' }}
                 >
-                  Flash.
+                  flash
                 </VerticalCutReveal>
               </motion.h1>
 
