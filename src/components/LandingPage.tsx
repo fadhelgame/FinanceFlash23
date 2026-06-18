@@ -85,7 +85,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="text-4xl sm:text-5xl md:text-[72px] lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.03em] mb-6"
+              className="text-3xl sm:text-4xl md:text-[56px] lg:text-[72px] font-semibold leading-[1.05] -tracking-[0.03em] mb-6"
               style={{ color: 'var(--color-ink-0)' }}
             >
               <VerticalCutReveal
