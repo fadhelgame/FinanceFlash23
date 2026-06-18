@@ -96,8 +96,9 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 containerClassName="block"
                 wordLevelClassName="inline-flex overflow-hidden pb-1"
               >
-                Track your money.
+                Track your
               </VerticalCutReveal>
+              <br className="sm:hidden" />
               <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
@@ -106,8 +107,9 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 containerClassName="inline-flex"
                 wordLevelClassName="inline-flex overflow-hidden"
               >
-                In a
+                money in a
               </VerticalCutReveal>{' '}
+              <br className="sm:hidden" />
               <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
