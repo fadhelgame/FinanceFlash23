@@ -154,7 +154,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const { loadFromDrive } = await import('./google-drive')
       driveData = await loadFromDrive<FinanceData>()
     } catch {
-      // Drive unavailable
+      console.warn('Drive load unavailable, using local data');
     }
 
     // Try localStorage
@@ -163,7 +163,9 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (local) {
         localData = JSON.parse(local)
       }
-    } catch {}
+    } catch {
+      console.warn('localStorage read failed');
+    }
 
     // Merge: take the most recent data from each source
     // For each account/tx/recurring, keep the one with the most recent createdAt

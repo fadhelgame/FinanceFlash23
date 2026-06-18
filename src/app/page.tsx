@@ -7,20 +7,9 @@ import { VerticalCutReveal } from '@/components/VerticalCutReveal'
 import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
 import NavBar from '@/components/NavBar'
-import {
-  formatIDR,
-  getTotalBalance,
-  getTotalIncome,
-  getTotalExpense,
-  getAccountBalance,
-  getActiveAccounts,
-  getSettledAccounts,
-  ACCOUNT_ICONS,
-  ACCOUNT_TYPES,
-  CATEGORIES,
-  generateId,
-} from '@/lib/types'
+import { formatIDR, getTotalBalance, getTotalIncome, getTotalExpense, getAccountBalance, getActiveAccounts, getSettledAccounts, CATEGORIES, generateId } from '@/lib/types'
 import type { Account, Transaction, RecurringTransaction, TransactionCategory, AccountType } from '@/lib/types'
+import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
 
 import {
   Banknote,
@@ -29,76 +18,19 @@ import {
   CreditCard,
   Smartphone,
   Shield,
-  ForkKnife,
-  Car,
-  ShoppingBag,
-  Gamepad2,
-  FileText,
-  Heart,
-  Ellipsis,
   Plus,
   LogOut,
-  ArrowRight,
   TrendingUp,
   TrendingDown,
-  ArrowDownLeft,
-  ArrowUpRight,
   RefreshCw,
   ChevronRight,
-  Clock,
+  ArrowDownLeft,
+  FileText,
   CheckSquare,
   Square,
 } from 'lucide-react'
 
 /* ---------- Icon/Color helpers ---------- */
-
-const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
-  Cash: '#22c55e',
-  Bank: '#3b82f6',
-  'Credit Card': '#f97316',
-  Loan: '#ef4444',
-  'E-Wallet': '#a855f7',
-  Savings: '#14b8a6',
-}
-
-const CATEGORY_COLORS: Record<TransactionCategory, string> = {
-  Food: '#f97316',
-  Transport: '#3b82f6',
-  Shopping: '#ec4899',
-  Entertainment: '#a855f7',
-  Bills: '#ef4444',
-  Salary: '#22c55e',
-  Health: '#14b8a6',
-  Other: '#6b7280',
-}
-
-function AcctIcon({ type, className, style }: { type: AccountType; className?: string; style?: React.CSSProperties }) {
-  const iconName = ACCOUNT_ICONS[type]
-  const props = { className: className || 'w-5 h-5', style: style || { color: '#fff' } }
-  switch (iconName) {
-    case 'banknote': return <Banknote {...props} />
-    case 'building': return <Wallet {...props} />
-    case 'credit-card': return <CreditCard {...props} />
-    case 'arrow-left-right': return <ArrowLeftRight {...props} />
-    case 'smartphone': return <Smartphone {...props} />
-    case 'shield': return <Shield {...props} />
-    default: return <Wallet {...props} />
-  }
-}
-
-function CatIcon({ category, className, style }: { category: TransactionCategory; className?: string; style?: React.CSSProperties }) {
-  const props = { className: className || 'w-5 h-5', style: style || {} }
-  switch (category) {
-    case 'Food': return <ForkKnife {...props} />
-    case 'Transport': return <Car {...props} />
-    case 'Shopping': return <ShoppingBag {...props} />
-    case 'Entertainment': return <Gamepad2 {...props} />
-    case 'Bills': return <FileText {...props} />
-    case 'Salary': return <TrendingUp {...props} />
-    case 'Health': return <Heart {...props} />
-    default: return <Ellipsis {...props} />
-  }
-}
 
 /* ---------- AddTransaction Modal ---------- */
 

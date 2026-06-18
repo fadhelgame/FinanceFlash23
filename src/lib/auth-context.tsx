@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading: false,
       })
     } catch {
+      console.warn('Auth check failed');
       setAuth({ isAuthenticated: false, userEmail: null, loading: false })
     }
   }
@@ -54,7 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const m = await import('./google-drive')
       await m.logout()
-    } catch {}
+    } catch {
+      console.warn('Logout failed');
+    }
     setAuth({ isAuthenticated: false, userEmail: null, loading: false })
   }, [])
 
