@@ -10,13 +10,15 @@ import {
   RefreshCw,
   ArrowDownLeft,
   Smartphone,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
+  CarouselDots,
+  CarouselCounter,
 } from '@/components/ui/carousel'
 
 export default function LandingPage({ login }: { login: () => Promise<void> }) {
@@ -259,31 +261,108 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             ))}
           </div>
 
-          {/* Mobile: Embla Carousel */}
-          <div className="sm:hidden">
-            <Carousel opts={{ align: 'start' }}>
-              <CarouselContent>
+          {/* Mobile: Premium Embla Carousel — "Luminous Glide" */}
+          <div className="sm:hidden mt-2">
+            <Carousel
+              opts={{ align: 'start', loop: true }}
+              autoPlayInterval={4000}
+            >
+              <CarouselContent className="-ml-3">
                 {featuresData.map((feature, i) => (
-                  <CarouselItem key={i}>
-                    <div className="card p-4">
+                  <CarouselItem key={i} className="pl-3 basis-[88%]">
+                    <div
+                      className="carousel-card card p-5"
+                      style={{
+                        background: 'var(--color-paper-0)',
+                        '--card-accent': `linear-gradient(135deg, ${feature.color}, color-mix(in oklch, ${feature.color} 60%, var(--color-accent)))` as string,
+                        boxShadow:
+                          'rgba(255,255,255,0.7) 0px 1px 0px inset, rgba(20,30,80,0.25) 0px 24px 60px -28px, rgba(20,30,80,0.08) 0px 4px 12px -4px',
+                      } as React.CSSProperties}
+                    >
+                      {/* Icon with glow */}
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
-                        style={{ background: `${feature.color}1F` }}
+                        className="carousel-icon-glow w-12 h-12 rounded-full flex items-center justify-center mb-3.5"
+                        style={{
+                          background: `color-mix(in oklch, ${feature.color} 14%, var(--color-paper-0))`,
+                          '--icon-glow-color': feature.color,
+                          border: `1px solid color-mix(in oklch, ${feature.color} 25%, transparent)`,
+                        } as React.CSSProperties}
                       >
-                        <span style={{ color: feature.color }}>{feature.icon}</span>
+                        <span className="w-5 h-5 flex items-center justify-center" style={{ color: feature.color }}>
+                          {feature.icon}
+                        </span>
                       </div>
-                      <h3 className="text-[16px] font-semibold mb-1" style={{ color: 'var(--color-ink-0)' }}>
+                      {/* Title */}
+                      <h3
+                        className="text-[17px] font-semibold leading-tight mb-1.5"
+                        style={{ color: 'var(--color-ink-0)' }}
+                      >
                         {feature.title}
                       </h3>
-                      <p className="text-xs line-clamp-2" style={{ color: 'var(--color-ink-1)' }}>
+                      {/* Description */}
+                      <p
+                        className="text-[13px] leading-relaxed line-clamp-2"
+                        style={{ color: 'var(--color-ink-1)' }}
+                      >
                         {feature.desc}
                       </p>
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
+
+              {/* Bottom navigation row: arrow — dots — arrow — counter */}
+              <div className="flex items-center justify-center gap-3 mt-5 px-2">
+                {/* Previous arrow */}
+                <button
+                  type="button"
+                  className="flex items-center justify-center size-8 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    background: 'var(--color-paper-0)',
+                    border: 'var(--rule-soft)',
+                    color: 'var(--color-ink-1)',
+                    boxShadow: 'rgba(20,30,80,0.12) 0px 4px 12px -4px',
+                  }}
+                  onClick={() => {
+                    const el = document.querySelector('[data-slot=\"carousel\"]');
+                    if (el) {
+                      const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
+                      el.dispatchEvent(event);
+                    }
+                  }}
+                  aria-label="Previous slide"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+
+                {/* Dots */}
+                <CarouselDots className="gap-2" />
+
+                {/* Next arrow */}
+                <button
+                  type="button"
+                  className="flex items-center justify-center size-8 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    background: 'var(--color-paper-0)',
+                    border: 'var(--rule-soft)',
+                    color: 'var(--color-ink-1)',
+                    boxShadow: 'rgba(20,30,80,0.12) 0px 4px 12px -4px',
+                  }}
+                  onClick={() => {
+                    const el = document.querySelector('[data-slot=\"carousel\"]');
+                    if (el) {
+                      const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
+                      el.dispatchEvent(event);
+                    }
+                  }}
+                  aria-label="Next slide"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                {/* Slide counter */}
+                <CarouselCounter className="ml-1" />
+              </div>
             </Carousel>
           </div>
         </div>

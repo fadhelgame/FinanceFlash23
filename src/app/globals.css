@@ -238,6 +238,59 @@ button, input, select { font: inherit; color: inherit; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Carousel ── */
+
+/* Premium carousel card with accent top gradient border */
+.carousel-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--card-accent, var(--color-accent));
+  opacity: 0.8;
+}
+
+/* Glow ring behind icon */
+.carousel-icon-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.carousel-icon-glow::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--icon-glow-color, var(--color-accent));
+  opacity: 0.12;
+  filter: blur(8px);
+  z-index: -1;
+  animation: glow-pulse 3s var(--ease-in-out) infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.10; transform: scale(1); }
+  50% { opacity: 0.18; transform: scale(1.1); }
+}
+
+/* Slide-in animation for carousel items */
+.carousel-item-enter {
+  animation: carousel-slide-in 0.4s var(--ease-out) both;
+}
+
+@keyframes carousel-slide-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
