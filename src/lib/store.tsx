@@ -68,6 +68,8 @@ const FinanceContext = createContext<{
   loadFromSource: () => Promise<void>
   saving: boolean
   lastSaved: string | null
+  isDemoMode: boolean
+  setDemoMode: (v: boolean) => void
 } | null>(null)
 
 const STORAGE_KEY = 'finance-flash-data'
@@ -90,10 +92,13 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   })
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const [isDemoMode, setDemoMode] = useState(false)
   const stateRef = useRef(state)
   const savingRef = useRef(false)
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const demoModeRef = useRef(false)
   stateRef.current = state
+  demoModeRef.current = isDemoMode
 
   // Persist to localStorage synchronously on every state change
   useEffect(() => {
@@ -105,6 +110,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // Fire Drive save in background on every change (500ms debounce)
   useEffect(() => {
     if (!state.loaded) return
+    if (isDemoMode) return
 
     // Debounce: clear previous timer
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
@@ -136,6 +142,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // Save on tab close / hide
   useEffect(() => {
     const handleSave = () => {
+      if (demoModeRef.current) return
       const data = getFinanceData(stateRef.current)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
       import('./google-drive').then(m =>
@@ -237,6 +244,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   // Manual save function with feedback
   const saveToDrive = useCallback(async (): Promise<boolean> => {
+    if (demoModeRef.current) return false
     try {
       setSaving(true)
       const data = getFinanceData(stateRef.current)
@@ -256,7 +264,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     loadFromSource()
   }, [loadFromSource])
 
-  const contextValue = useMemo(() => ({ state, dispatch, saveToDrive, loadFromSource, saving, lastSaved }), [state, dispatch, saveToDrive, loadFromSource, saving, lastSaved])
+  const contextValue = useMemo(() => ({ state, dispatch, saveToDrive, loadFromSource, saving, lastSaved, isDemoMode, setDemoMode }), [state, dispatch, saveToDrive, loadFromSource, saving, lastSaved, isDemoMode, setDemoMode])
 
   return (
     <FinanceContext.Provider value={contextValue}>

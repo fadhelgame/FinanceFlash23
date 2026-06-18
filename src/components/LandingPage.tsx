@@ -21,7 +21,7 @@ import {
   CarouselCounter,
 } from '@/components/ui/carousel'
 
-export default function LandingPage({ login }: { login: () => Promise<void> }) {
+export default function LandingPage({ login, onDemo }: { login: () => Promise<void>; onDemo?: () => void }) {
   // ── Features Carousel State ──
   const featuresData = [
     {
@@ -169,10 +169,10 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={onDemo}
                 className="btn-ghost px-8 py-3.5 text-base"
               >
-                Learn more
+                Try Demo
               </motion.button>
             </motion.div>
           </div>
