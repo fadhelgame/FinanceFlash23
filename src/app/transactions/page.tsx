@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import AuthGuard from '@/components/AuthGuard'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
 import { formatIDR, CATEGORIES, generateId, getActiveAccounts } from '@/lib/types'
@@ -236,7 +237,8 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="pb-24">
+    <AuthGuard>
+      <div className="pb-24">
       <NavBar />
 
       <main className="section pt-20">
@@ -566,6 +568,7 @@ export default function TransactionsPage() {
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-    </div>
+      </div>
+    </AuthGuard>
   )
 }

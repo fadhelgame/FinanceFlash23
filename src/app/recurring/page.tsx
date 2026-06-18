@@ -7,6 +7,7 @@ import { useFinanceStore } from '@/lib/store'
 import { formatIDR, CATEGORIES, generateId } from '@/lib/types'
 import type { RecurringTransaction, TransactionCategory } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon } from '@/lib/ui-utils'
+import AuthGuard from '@/components/AuthGuard'
 import { Plus, RefreshCw } from 'lucide-react'
 
 /* ---------- Add/Edit Modal ---------- */
@@ -277,6 +278,7 @@ export default function RecurringPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="pb-24">
       <NavBar />
 
@@ -414,5 +416,6 @@ export default function RecurringPage() {
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
+    </AuthGuard>
   )
 }

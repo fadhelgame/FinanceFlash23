@@ -8,6 +8,7 @@ import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, AC
 import type { Account, AccountType } from '@/lib/types'
 import { ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
 import { Wallet, Plus, Check } from 'lucide-react'
+import AuthGuard from '@/components/AuthGuard'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   Cash: 'Cash',
@@ -140,6 +141,7 @@ export default function AccountsPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="pb-24">
       <NavBar />
 
@@ -283,5 +285,6 @@ export default function AccountsPage() {
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
+    </AuthGuard>
   )
 }

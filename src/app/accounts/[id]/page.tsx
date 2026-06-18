@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
+import AuthGuard from '@/components/AuthGuard'
 import { useFinanceStore } from '@/lib/store'
 import { formatIDR, getAccountBalance, getTotalIncome, getTotalExpense, ACCOUNT_ICONS, CATEGORIES, generateId } from '@/lib/types'
 import type { Account, Transaction, TransactionCategory } from '@/lib/types'
@@ -291,7 +292,8 @@ export default function AccountDetailPage() {
   }
 
   return (
-    <div className="pb-24">
+    <AuthGuard>
+      <div className="pb-24">
       <NavBar />
 
       <main className="section pt-20">
@@ -441,5 +443,6 @@ export default function AccountDetailPage() {
         onClose={() => { setShowEditModal(false); setEditingTx(null) }}
       />
     </div>
+    </AuthGuard>
   )
 }
