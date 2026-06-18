@@ -92,6 +92,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const stateRef = useRef(state)
   const savingRef = useRef(false)
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
   stateRef.current = state
 
   // Persist to localStorage synchronously on every state change
@@ -101,24 +102,35 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [state])
 
-  // Fire Drive save in background on every change (no debounce)
+  // Fire Drive save in background on every change (500ms debounce)
   useEffect(() => {
     if (!state.loaded) return
-    if (savingRef.current) return
-    savingRef.current = true
-    setSaving(true)
 
-    const data = getFinanceData(state)
-    import('./google-drive').then(m =>
-      m.saveToDrive(data).then(() => {
+    // Debounce: clear previous timer
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+
+    saveTimerRef.current = setTimeout(async () => {
+      if (savingRef.current) return
+      savingRef.current = true
+      setSaving(true)
+
+      const data = getFinanceData(state)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      try {
+        const { saveToDrive: apiSave } = await import('./google-drive')
+        await apiSave(data)
         setSaving(false)
         savingRef.current = false
         setLastSaved(new Date().toLocaleTimeString('id-ID'))
-      }).catch(() => {
+      } catch {
         setSaving(false)
         savingRef.current = false
-      })
-    )
+      }
+    }, 500)
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
   }, [state])
 
   // Save on tab close / hide

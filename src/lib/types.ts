@@ -148,6 +148,17 @@ export function processRecurring(
     nextDue.setHours(0, 0, 0, 0);
 
     if (nextDue <= today) {
+      // Idempotency check: skip if a matching transaction already exists
+      const alreadyGenerated = existingTransactions.some((tx) =>
+        tx.title === recurring.title &&
+        tx.amount === recurring.amount &&
+        tx.category === recurring.category &&
+        tx.isIncome === recurring.isIncome &&
+        new Date(tx.date).getMonth() === nextDue.getMonth() &&
+        new Date(tx.date).getFullYear() === nextDue.getFullYear()
+      );
+      if (alreadyGenerated) continue;
+
       const tx: Transaction = {
         id: crypto.randomUUID(),
         title: recurring.title,
