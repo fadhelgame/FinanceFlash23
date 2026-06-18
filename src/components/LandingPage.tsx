@@ -236,8 +236,9 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             className="text-3xl sm:text-4xl lg:text-[56px] font-semibold leading-[1.05] -tracking-[0.03em] mb-16"
             style={{ color: 'var(--color-ink-0)' }}
           >
-            Everything you <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>need</span><br />
-            to stay on top
+            Everything you <br className="sm:hidden" />
+            <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>need</span> to stay <br className="sm:hidden" />
+            on top
           </motion.h2>
           {/* Desktop: Grid */}
           <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
