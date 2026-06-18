@@ -228,7 +228,7 @@ export default function DashboardView({
       <NavBar isDemoMode={isDemoMode} onExitDemo={onExitDemo} />
 
       {isDemoMode && (
-        <div className="section pt-4 pb-0">
+        <div className="px-4 sm:px-6 pt-4 pb-0 max-w-[1240px] mx-auto">
           <div
             className="inline-flex items-center gap-3 px-4 py-2 rounded-full text-xs"
             style={{
