@@ -17,7 +17,6 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-  CarouselDots,
 } from '@/components/ui/carousel'
 
 export default function LandingPage({ login }: { login: () => Promise<void> }) {
@@ -262,11 +261,11 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
 
           {/* Mobile: Embla Carousel */}
           <div className="sm:hidden">
-            <Carousel opts={{ align: 'start', loop: false }}>
+            <Carousel opts={{ align: 'start' }}>
               <CarouselContent>
                 {featuresData.map((feature, i) => (
                   <CarouselItem key={i}>
-                    <div className="card p-4 mx-6">
+                    <div className="card p-4">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
                         style={{ background: `${feature.color}1F` }}
@@ -279,14 +278,12 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                       <p className="text-xs line-clamp-2" style={{ color: 'var(--color-ink-1)' }}>
                         {feature.desc}
                       </p>
-                      {/* Prev/Next buttons overlaid on card */}
-                      <CarouselPrevious />
-                      <CarouselNext />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselDots className="mt-6" />
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
             </Carousel>
           </div>
         </div>
