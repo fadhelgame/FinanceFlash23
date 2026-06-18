@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react'
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useState } from 'react'
 import type { Account, Transaction, RecurringTransaction, FinanceData } from './types'
 import { processRecurring, generateId } from './types'
 
@@ -64,8 +64,10 @@ function reducer(state: FinanceState, action: Action): FinanceState {
 const FinanceContext = createContext<{
   state: FinanceState
   dispatch: React.Dispatch<Action>
-  saveToDrive: () => Promise<void>
+  saveToDrive: () => Promise<boolean>
   loadFromSource: () => Promise<void>
+  saving: boolean
+  lastSaved: string | null
 } | null>(null)
 
 const STORAGE_KEY = 'finance-flash-data'
@@ -86,85 +88,153 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     recurringTransactions: [],
     loaded: false,
   })
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const stateRef = useRef(state)
+  const savingRef = useRef(false)
+  stateRef.current = state
 
-  const saveToDrive = useCallback(async () => {
-    const data = getFinanceData(state)
-    // Save to localStorage always
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-    
-    // Try Drive save if available
-    try {
-      const { saveToDrive: apiSave } = await import('./google-drive')
-      await apiSave(data)
-    } catch {
-      // Drive not configured yet — that's fine
-    }
-  }, [state])
-
-  // Auto-save debounced
+  // Persist to localStorage synchronously on every state change
   useEffect(() => {
     if (!state.loaded) return
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => {
-      const data = getFinanceData(state)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-      
-      // Try Drive save in background
-      import('./google-drive').then(m => 
-        m.saveToDrive(data).catch(() => {})
-      )
-    }, 2000)
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    }
+    const data = getFinanceData(state)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [state])
 
-  const loadFromSource = useCallback(async () => {
-    // Try Google Drive first
-    try {
-      const { loadFromDrive } = await import('./google-drive')
-      const driveData = await loadFromDrive<FinanceData>()
-      if (driveData && driveData.accounts) {
-        // Process recurring
-        const { newTransactions, updatedRecurring } = processRecurring(
-          driveData.recurringTransactions || [],
-          driveData.transactions || []
-        )
-        dispatch({ type: 'SET_DATA', payload: driveData })
-        if (newTransactions.length > 0) {
-          dispatch({ type: 'ADD_MULTIPLE_TRANSACTIONS', payload: newTransactions })
-        }
-        if (updatedRecurring.length > 0) {
-          dispatch({ type: 'UPDATE_MULTIPLE_RECURRING', payload: updatedRecurring })
-        }
-        return
-      }
-    } catch {
-      // Drive not available, fall through to localStorage
+  // Fire Drive save in background on every change (no debounce)
+  useEffect(() => {
+    if (!state.loaded) return
+    if (savingRef.current) return
+    savingRef.current = true
+    setSaving(true)
+
+    const data = getFinanceData(state)
+    import('./google-drive').then(m =>
+      m.saveToDrive(data).then(() => {
+        setSaving(false)
+        savingRef.current = false
+        setLastSaved(new Date().toLocaleTimeString('id-ID'))
+      }).catch(() => {
+        setSaving(false)
+        savingRef.current = false
+      })
+    )
+  }, [state])
+
+  // Save on tab close / hide
+  useEffect(() => {
+    const handleSave = () => {
+      const data = getFinanceData(stateRef.current)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      import('./google-drive').then(m =>
+        m.saveToDrive(data).catch(() => {})
+      )
     }
 
-    // Fallback to localStorage
+    window.addEventListener('beforeunload', handleSave)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        handleSave()
+      }
+    })
+
+    return () => {
+      window.removeEventListener('beforeunload', handleSave)
+      document.removeEventListener('visibilitychange', handleSave)
+    }
+  }, [])
+
+  // Merge data on load — take the latest version from either source
+  const loadFromSource = useCallback(async () => {
+    let driveData: FinanceData | null = null
+    let localData: FinanceData | null = null
+
+    // Try Drive
+    try {
+      const { loadFromDrive } = await import('./google-drive')
+      driveData = await loadFromDrive<FinanceData>()
+    } catch {
+      // Drive unavailable
+    }
+
+    // Try localStorage
     try {
       const local = localStorage.getItem(STORAGE_KEY)
       if (local) {
-        const data: FinanceData = JSON.parse(local)
-        const { newTransactions, updatedRecurring } = processRecurring(
-          data.recurringTransactions || [],
-          data.transactions || []
-        )
-        dispatch({ type: 'SET_DATA', payload: data })
-        if (newTransactions.length > 0) {
-          dispatch({ type: 'ADD_MULTIPLE_TRANSACTIONS', payload: newTransactions })
-        }
-        if (updatedRecurring.length > 0) {
-          dispatch({ type: 'UPDATE_MULTIPLE_RECURRING', payload: updatedRecurring })
-        }
-      } else {
-        dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: new Date().toISOString() } })
+        localData = JSON.parse(local)
       }
-    } catch {
+    } catch {}
+
+    // Merge: take the most recent data from each source
+    // For each account/tx/recurring, keep the one with the most recent createdAt
+    const merged: FinanceData = {
+      accounts: [],
+      transactions: [],
+      recurringTransactions: [],
+      lastUpdated: new Date().toISOString(),
+    }
+
+    const accountMap = new Map<string, Account>()
+    const txMap = new Map<string, Transaction>()
+    const recurringMap = new Map<string, RecurringTransaction>()
+
+    for (const source of [driveData, localData]) {
+      if (!source) continue
+      for (const a of source.accounts || []) {
+        const existing = accountMap.get(a.id)
+        if (!existing || (a.createdAt || '') > (existing.createdAt || '')) {
+          accountMap.set(a.id, a)
+        }
+      }
+      for (const t of source.transactions || []) {
+        const existing = txMap.get(t.id)
+        if (!existing || (t.createdAt || '') > (existing.createdAt || '')) {
+          txMap.set(t.id, t)
+        }
+      }
+      for (const r of source.recurringTransactions || []) {
+        const existing = recurringMap.get(r.id)
+        if (!existing || (r.createdAt || '') > (existing.createdAt || '')) {
+          recurringMap.set(r.id, r)
+        }
+      }
+    }
+
+    merged.accounts = Array.from(accountMap.values())
+    merged.transactions = Array.from(txMap.values())
+    merged.recurringTransactions = Array.from(recurringMap.values())
+
+    if (merged.accounts.length > 0 || merged.transactions.length > 0 || merged.recurringTransactions.length > 0) {
+      const { newTransactions, updatedRecurring } = processRecurring(
+        merged.recurringTransactions || [],
+        merged.transactions || []
+      )
+      dispatch({ type: 'SET_DATA', payload: merged })
+      if (newTransactions.length > 0) {
+        dispatch({ type: 'ADD_MULTIPLE_TRANSACTIONS', payload: newTransactions })
+      }
+      if (updatedRecurring.length > 0) {
+        dispatch({ type: 'UPDATE_MULTIPLE_RECURRING', payload: updatedRecurring })
+      }
+    } else {
       dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: new Date().toISOString() } })
+    }
+  }, [])
+
+  // Manual save function with feedback
+  const saveToDrive = useCallback(async (): Promise<boolean> => {
+    try {
+      setSaving(true)
+      const data = getFinanceData(stateRef.current)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      const { saveToDrive: apiSave } = await import('./google-drive')
+      await apiSave(data)
+      setLastSaved(new Date().toLocaleTimeString('id-ID'))
+      setSaving(false)
+      return true
+    } catch {
+      setSaving(false)
+      return false
     }
   }, [])
 
@@ -173,7 +243,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   }, [loadFromSource])
 
   return (
-    <FinanceContext.Provider value={{ state, dispatch, saveToDrive, loadFromSource }}>
+    <FinanceContext.Provider value={{ state, dispatch, saveToDrive, loadFromSource, saving, lastSaved }}>
       {children}
     </FinanceContext.Provider>
   )

@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { LogOut, Menu, X, LogIn, LayoutDashboard, Wallet, ArrowLeftRight, RefreshCw } from 'lucide-react'
+import { useFinanceStore } from '@/lib/store'
+import { LogOut, Menu, X, LogIn, LayoutDashboard, Wallet, ArrowLeftRight, RefreshCw, Cloud, CloudOff, Save } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,8 +17,16 @@ const links = [
 export default function NavBar() {
   const pathname = usePathname()
   const { isAuthenticated, userEmail, login, logout } = useAuth()
+  const { saving, lastSaved, saveToDrive } = useFinanceStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [expanded, setExpanded] = useState(true)
+  const [saveMsg, setSaveMsg] = useState<string | null>(null)
+
+  const handleManualSave = async () => {
+    const ok = await saveToDrive()
+    setSaveMsg(ok ? 'Saved ✓' : 'Save failed')
+    setTimeout(() => setSaveMsg(null), 2000)
+  }
 
   return (
     <nav
@@ -121,6 +130,33 @@ export default function NavBar() {
       <div className="hidden sm:flex items-center gap-1.5">
         {isAuthenticated ? (
           <>
+            {/* Sync status indicator */}
+            <div className="flex items-center gap-1.5 px-2 py-1.5">
+              {saving ? (
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-accent)' }} />
+              ) : (
+                <Cloud className="w-3.5 h-3.5" style={{ color: 'var(--color-ink-3)' }} />
+              )}
+              {lastSaved && (
+                <span className="mono-label hidden lg:inline text-[10px]">{lastSaved}</span>
+              )}
+            </div>
+
+            {/* Manual Save button */}
+            <button
+              onClick={handleManualSave}
+              className="flex items-center gap-1 rounded-xl px-2 py-1.5 text-xs font-medium transition-all"
+              style={{ color: 'var(--color-ink-2)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-paper-2)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              title="Save now"
+              disabled={saving}
+            >
+              {saveMsg || <Save className="w-3.5 h-3.5" />}
+            </button>
+
+            <div className="h-5 w-px shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
+
             <div className="flex items-center gap-1.5 px-2 py-1.5">
               <span className="live-dot" />
               <span className="mono-label hidden lg:inline">LIVE</span>
@@ -200,11 +236,16 @@ export default function NavBar() {
               })}
               <div className="h-px my-1.5 mx-3" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
               <div className="flex items-center gap-2 px-3.5 py-2">
+                {/* Manual save on mobile too */}
+                <button onClick={handleManualSave} className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs" style={{ color: 'var(--color-ink-2)' }} disabled={saving}>
+                  <Save className="w-3.5 h-3.5" />
+                  {saveMsg || 'Save'}
+                </button>
+                <span className="flex-1" />
                 <span className="live-dot" />
                 <span className="mono-label text-[10px]">LIVE</span>
-                <span className="flex-1" />
                 {userEmail && (
-                  <span className="text-xs truncate max-w-[120px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
+                  <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
                 )}
                 <button onClick={logout} className="flex items-center justify-center p-1.5 rounded-xl" style={{ color: 'var(--color-ink-2)' }}>
                   <LogOut className="w-4 h-4" />
