@@ -105,7 +105,17 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.5 }}
                 wordLevelClassName="inline-flex overflow-hidden"
               >
-                money in
+                money
+              </VerticalCutReveal>{' '}
+              <span className="hidden sm:block" />
+              <VerticalCutReveal
+                splitBy="characters"
+                staggerDuration={0.06}
+                staggerFrom="first"
+                transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.5 }}
+                wordLevelClassName="inline-flex overflow-hidden"
+              >
+                in
               </VerticalCutReveal>{' '}
               <span className="sm:hidden block" />
               <VerticalCutReveal
