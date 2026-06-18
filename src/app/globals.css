@@ -24,7 +24,7 @@ button, input, select { font: inherit; color: inherit; }
 ::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--color-ink-0) 10%, transparent); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, var(--color-ink-0) 20%, transparent); }
 
-/* Page grid background (subtle) — drifting dot pattern */
+/* Page grid background — dot pattern + accent glow + ledger lines */
 .page-grid {
   position: relative;
   overflow: clip;
@@ -35,16 +35,41 @@ button, input, select { font: inherit; color: inherit; }
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--color-ink-0) 6%, transparent) 1px, transparent 0);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(80% 60% at 50% 35%, black 30%, transparent 70%);
+    /* Dot grid — wider spacing */
+    radial-gradient(circle at 1px 1px, color-mix(in oklch, var(--color-ink-0) 5%, transparent) 1px, transparent 0),
+    /* Accent "flash" glow from top-right (behind demo card) */
+    radial-gradient(100% 80% at 75% 30%, 
+      color-mix(in oklch, var(--color-accent) 10%, transparent) 0%,
+      color-mix(in oklch, var(--color-accent) 3%, transparent) 35%,
+      transparent 65%);
+  background-size: 56px 56px, 100% 100%;
+  mask-image: radial-gradient(85% 65% at 50% 35%, black 30%, transparent 72%);
   pointer-events: none;
   z-index: 0;
   animation: grid-drift 120s linear infinite;
 }
 @keyframes grid-drift {
-  0% { background-position: 0 0; }
-  100% { background-position: 48px 48px; }
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 56px 56px, 0 0; }
+}
+
+/* Ledger accent lines — vertical indigo every 4 dots */
+.page-grid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      transparent 0px,
+      transparent calc(192px - 1px),
+      color-mix(in oklch, var(--color-accent) 4%, transparent) calc(192px - 0.5px),
+      color-mix(in oklch, var(--color-accent) 4%, transparent) calc(192px + 0.5px),
+      transparent calc(192px + 1px)
+    );
+  mask-image: radial-gradient(70% 55% at 50% 35%, black 25%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Floating pill nav */
