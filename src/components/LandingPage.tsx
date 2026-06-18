@@ -273,7 +273,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             rotateX: 8,
           }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1], delay: 0.1 }}
+          transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.1 }}
         >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               <CinematicText

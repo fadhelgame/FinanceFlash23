@@ -29,7 +29,7 @@ export default function CinematicText({ text, className = '', accent, accentClas
               delay: i * 0.08,
               ease: [0.25, 0.46, 0.45, 0.94],
             }}
-            className={`inline-block ${isAccent ? accentClassName : ''}`}
+            className={`inline-block mr-[0.28em] ${isAccent ? accentClassName : ''}`}
             style={{ willChange: 'filter, transform, opacity', ...(isAccent && style ? style : {}) }}
           >
             {word}
