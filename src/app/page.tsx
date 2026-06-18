@@ -555,9 +555,20 @@ export default function DashboardPage() {
                   transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.5 }}
                   containerClassName="inline-flex"
                   wordLevelClassName="inline-flex overflow-hidden"
-                  elementLevelClassName="italic-accent"
                 >
-                  In a flash.
+                  In a{'\u00A0'}
+                </VerticalCutReveal>
+                <VerticalCutReveal
+                  splitBy="characters"
+                  staggerDuration={0.06}
+                  staggerFrom="first"
+                  transition={{ type: "spring", stiffness: 190, damping: 22, delay: 0.7 }}
+                  containerClassName="inline-flex"
+                  wordLevelClassName="inline-flex overflow-hidden"
+                  elementLevelClassName="italic-accent"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  Flash.
                 </VerticalCutReveal>
               </motion.h1>
 

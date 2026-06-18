@@ -22,6 +22,7 @@ interface TextProps {
   containerClassName?: string
   wordLevelClassName?: string
   elementLevelClassName?: string
+  style?: React.CSSProperties
   onClick?: () => void
   onStart?: () => void
   onComplete?: () => void
