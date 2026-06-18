@@ -516,8 +516,8 @@ export default function DashboardPage() {
       <div className="min-h-screen page-grid">
 
         {/* Hero — 2-column layout like Tally */}
-        <section className="section pt-32 sm:pt-40 pb-20 sm:pb-32 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_1fr] gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
+        <section className="section pt-[140px] pb-20 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_1fr] gap-12 lg:gap-16 items-center">
             {/* Left: Content */}
             <div className="text-center lg:text-left">
               <motion.div
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[0.96] tracking-[-0.03em] mb-6"
+                className="text-4xl sm:text-5xl md:text-[72px] lg:text-[80px] font-semibold leading-[0.96] tracking-[-0.03em] mb-6"
                 style={{ color: 'var(--color-ink-0)' }}
               >
                 <VerticalCutReveal
@@ -576,7 +576,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
-                className="text-lg max-w-lg mb-10"
+                className="text-lg max-w-md mb-8"
                 style={{ color: 'var(--color-ink-1)' }}
               >
                 Finance Flash is a personal finance tracker that works on any device. 
@@ -666,7 +666,7 @@ export default function DashboardPage() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
-          className="section pb-20 sm:pb-32"
+          className="section py-12 sm:py-20 lg:py-[48px]"
         >
           <div className="max-w-5xl mx-auto">
             <motion.p
@@ -683,7 +683,7 @@ export default function DashboardPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-3xl sm:text-4xl font-bold text-center mb-16"
+              className="text-3xl sm:text-4xl lg:text-[56px] font-semibold leading-[1.05] -tracking-[0.03em] text-center mb-16"
               style={{ color: 'var(--color-ink-0)' }}
             >
               Everything you need to <span className="italic-accent">stay on top</span>
@@ -740,7 +740,7 @@ export default function DashboardPage() {
                   <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${feature.color}1F` }}>
                     <span style={{ color: feature.color }}>{feature.icon}</span>
                   </div>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{feature.title}</h3>
+                  <h3 className="text-[22px] font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{feature.title}</h3>
                   <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{feature.desc}</p>
                 </motion.div>
               ))}
@@ -754,7 +754,7 @@ export default function DashboardPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-          className="section pb-32 text-center"
+          className="section py-20 text-center"
           style={{ perspective: '1000px' }}
         >
           <motion.div
@@ -799,7 +799,7 @@ export default function DashboardPage() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="section pb-12"
+          className="section py-20 lg:pt-20 lg:pb-12"
         >
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid color-mix(in oklch, var(--color-ink-0) 10%, transparent)', paddingTop: 'var(--space-xl)' }}>
             <div className="flex items-center gap-2">
