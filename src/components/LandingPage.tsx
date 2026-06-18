@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { VerticalCutReveal } from '@/components/VerticalCutReveal'
 import CinematicText from '@/components/CinematicText'
+import DynamicWaveBg from '@/components/DynamicWaveBg'
 import Link from 'next/link'
 import {
   Wallet,
@@ -275,6 +276,8 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
           viewport={{ once: true }}
           transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.1 }}
         >
+          <DynamicWaveBg />
+          <div className="relative z-10">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               <CinematicText
                 text="Ready to take control"
@@ -320,6 +323,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
             Get started free
           </button>
           </motion.div>
+          </div>
         </motion.div>
       </motion.section>
 
