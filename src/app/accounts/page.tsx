@@ -7,7 +7,7 @@ import { useFinanceStore } from '@/lib/store'
 import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
 import type { Account, AccountType } from '@/lib/types'
 import { ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
-import { Wallet, Plus, Check } from 'lucide-react'
+import { Wallet, Plus, Check, Trash2, CheckSquare, Square } from 'lucide-react'
 import AuthGuard from '@/components/AuthGuard'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -131,10 +131,14 @@ export default function AccountsPage() {
   const { state, dispatch } = useFinanceStore()
   const [showModal, setShowModal] = useState(false)
   const [tab, setTab] = useState<'active' | 'settled'>('active')
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const transactions = state.transactions
   const activeAccounts = getActiveAccounts(state.accounts)
   const settledAccounts = getSettledAccounts(state.accounts)
+
+  const displayAccounts = tab === 'active' ? activeAccounts : settledAccounts
 
   const handleAdd = (account: Account) => {
     dispatch({ type: 'ADD_ACCOUNT', payload: account })
@@ -148,12 +152,21 @@ export default function AccountsPage() {
       <main className="section pt-20">
         <div className="flex items-center justify-between mb-6">
           <h1 className="section-title" style={{ margin: 0 }}>Accounts</h1>
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn btn-primary text-sm px-5 py-2"
-          >
-            <Plus className="w-4 h-4" /> Add
-          </button>
+          {selectMode ? (
+            <button
+              onClick={() => { setSelectMode(false); setSelectedIds(new Set()) }}
+              className="btn btn-ghost text-sm px-3 py-1.5"
+            >
+              Cancel
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn btn-primary text-sm px-5 py-2"
+            >
+              <Plus className="w-4 h-4" /> Add
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -169,6 +182,13 @@ export default function AccountsPage() {
             className={tab === 'settled' ? 'btn-primary px-4 py-2 text-sm' : 'btn-ghost px-4 py-2 text-sm'}
           >
             Settled Loans
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={() => setSelectMode(!selectMode)}
+            className="btn btn-ghost text-sm px-3 py-1.5"
+          >
+            {selectMode ? 'Cancel' : 'Manage'}
           </button>
         </div>
 
@@ -193,16 +213,38 @@ export default function AccountsPage() {
                 {activeAccounts.map(acc => {
                   const balance = getAccountBalance(acc, transactions)
                   const color = ACCOUNT_TYPE_COLORS[acc.type]
-                  return (
+                  const isSelected = selectedIds.has(acc.id)
+                  return selectMode ? (
+                    <button
+                      key={acc.id}
+                      onClick={() => {
+                        const next = new Set(selectedIds)
+                        if (isSelected) next.delete(acc.id)
+                        else next.add(acc.id)
+                        setSelectedIds(next)
+                      }}
+                      className="card flex items-center gap-4 w-full text-left"
+                      style={{ borderColor: isSelected ? 'var(--color-accent)' : undefined, borderWidth: isSelected ? '1.5px' : undefined }}
+                    >
+                      <div style={{ color: isSelected ? 'var(--color-accent)' : 'var(--color-ink-3)' }}>
+                        {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                      </div>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}1F` }}>
+                        <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{acc.name}</p>
+                        <p className="mono-label text-xs mt-0.5">{acc.type}</p>
+                      </div>
+                      <p className="text-lg font-bold" style={{ color: 'var(--color-ink-0)' }}>{formatIDR(balance)}</p>
+                    </button>
+                  ) : (
                     <Link
                       key={acc.id}
                       href={`/accounts/${acc.id}`}
                       className="card flex items-center gap-4 hover:scale-[1.01] transition-all"
                     >
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: `${color}1F` }}
-                      >
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}1F` }}>
                         <AcctIcon type={acc.type} className="w-6 h-6" style={{ color }} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -266,6 +308,31 @@ export default function AccountsPage() {
         )}
       </main>
 
+      {/* Batch delete bar */}
+      {selectMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 card flex items-center gap-3 px-5 py-3 shadow-lg">
+          <span className="text-sm font-medium shrink-0" style={{ color: 'var(--color-ink-0)' }}>
+            {selectedIds.size} selected
+          </span>
+          <button
+            onClick={() => {
+              const count = selectedIds.size
+              if (confirm(`Delete ${count} account${count > 1 ? 's' : ''}?`)) {
+                selectedIds.forEach(id => dispatch({ type: 'DELETE_ACCOUNT', payload: id }))
+                setSelectedIds(new Set())
+                setSelectMode(false)
+              }
+            }}
+            className="text-sm px-4 py-1.5 shrink-0 rounded-xl font-medium transition-all flex items-center gap-1.5"
+            style={{ color: 'var(--color-warning)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in oklch, var(--color-warning) 10%, transparent)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
+      )}
       {/* FAB */}
       <button
         onClick={() => setShowModal(true)}

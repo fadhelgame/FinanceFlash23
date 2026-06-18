@@ -457,6 +457,25 @@ export default function TransactionsPage() {
             >
               Assign
             </button>
+            <div className="w-px h-6 shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
+            <button
+              onClick={() => {
+                const count = selectedTxIds.size
+                if (confirm(`Delete ${count} transaction${count > 1 ? 's' : ''}?`)) {
+                  selectedTxIds.forEach(id => dispatch({ type: 'DELETE_TRANSACTION', payload: id }))
+                  setSelectedTxIds(new Set())
+                  setAssignAccountId('')
+                  setSelectMode(false)
+                }
+              }}
+              className="text-sm px-4 py-1.5 shrink-0 rounded-xl font-medium transition-all flex items-center gap-1.5"
+              style={{ color: 'var(--color-warning)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in oklch, var(--color-warning) 10%, transparent)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
           </div>
         )}
       </main>
