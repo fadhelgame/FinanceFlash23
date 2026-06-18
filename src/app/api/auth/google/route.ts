@@ -28,7 +28,6 @@ export async function GET() {
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
     access_type: 'offline',
-    prompt: 'consent',
   })
   params.set('state', state)
 
