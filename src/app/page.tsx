@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const handleExitDemo = () => {
     setDemoMode(false)
     demoInjectedRef.current = false
+    localStorage.removeItem('finance-flash-data')
     dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: '' } })
   }
 

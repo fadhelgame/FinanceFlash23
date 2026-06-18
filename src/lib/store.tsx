@@ -186,44 +186,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       console.warn('localStorage read failed');
     }
 
-    // Merge: take the most recent data from each source
-    // For each account/tx/recurring, keep the one with the most recent createdAt
-    const merged: FinanceData = {
-      accounts: [],
-      transactions: [],
-      recurringTransactions: [],
-      lastUpdated: new Date().toISOString(),
+    // Merge: take the most recent data from Drive (source of truth)
+    // localStorage is just a cache — Drive wins always
+    const merged: FinanceData = driveData
+      ? { ...driveData }
+      : localData
+        ? { ...localData }
+        : {
+            accounts: [],
+            transactions: [],
+            recurringTransactions: [],
+            lastUpdated: new Date().toISOString(),
+          }
+
+    // If Drive was available, overwrite localStorage with its data
+    // so stale demo cache never pollutes
+    if (driveData) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(driveData)) } catch {}
     }
-
-    const accountMap = new Map<string, Account>()
-    const txMap = new Map<string, Transaction>()
-    const recurringMap = new Map<string, RecurringTransaction>()
-
-    for (const source of [driveData, localData]) {
-      if (!source) continue
-      for (const a of source.accounts || []) {
-        const existing = accountMap.get(a.id)
-        if (!existing || (a.createdAt || '') > (existing.createdAt || '')) {
-          accountMap.set(a.id, a)
-        }
-      }
-      for (const t of source.transactions || []) {
-        const existing = txMap.get(t.id)
-        if (!existing || (t.createdAt || '') > (existing.createdAt || '')) {
-          txMap.set(t.id, t)
-        }
-      }
-      for (const r of source.recurringTransactions || []) {
-        const existing = recurringMap.get(r.id)
-        if (!existing || (r.createdAt || '') > (existing.createdAt || '')) {
-          recurringMap.set(r.id, r)
-        }
-      }
-    }
-
-    merged.accounts = Array.from(accountMap.values())
-    merged.transactions = Array.from(txMap.values())
-    merged.recurringTransactions = Array.from(recurringMap.values())
 
     if (merged.accounts.length > 0 || merged.transactions.length > 0 || merged.recurringTransactions.length > 0) {
       const { newTransactions, updatedRecurring } = processRecurring(
