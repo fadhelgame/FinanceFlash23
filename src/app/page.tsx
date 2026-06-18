@@ -64,14 +64,12 @@ export default function DashboardPage() {
           isDemoMode={isDemoMode}
           onExitDemo={handleExitDemo}
         />
-        {!isDemoMode && (
-          <AddTransactionModal
-            open={showTxModal}
-            onClose={() => { setShowTxModal(false); setEditingTx(null) }}
-            onSave={handleSaveTx}
-            initial={editingTx}
-          />
-        )}
+        <AddTransactionModal
+          open={showTxModal}
+          onClose={() => { setShowTxModal(false); setEditingTx(null) }}
+          onSave={handleSaveTx}
+          initial={editingTx}
+        />
       </>
     )
   }

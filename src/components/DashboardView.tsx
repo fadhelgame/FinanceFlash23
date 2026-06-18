@@ -227,34 +227,6 @@ export default function DashboardView({
     <div className="pb-24">
       <NavBar isDemoMode={isDemoMode} onExitDemo={onExitDemo} />
 
-      {isDemoMode && (
-        <div className="px-4 sm:px-6 pt-4 pb-0 max-w-[1240px] mx-auto">
-          <div
-            className="inline-flex items-center gap-3 px-4 py-2 rounded-full text-xs"
-            style={{
-              background: 'color-mix(in oklch, var(--color-accent) 12%, transparent)',
-              border: '1px solid color-mix(in oklch, var(--color-accent) 25%, transparent)',
-              color: 'var(--color-accent)',
-            }}
-          >
-            <span className="flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-accent)' }} />
-              Demo Mode
-            </span>
-            <span className="w-px h-4" style={{ background: 'color-mix(in oklch, var(--color-accent) 25%, transparent)' }} />
-            <button
-              onClick={login}
-              className="flex items-center gap-1.5 font-medium hover:underline"
-            >
-              Sign in with Google
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
       <main className="section pt-20">
         {/* Export button */}
         <div className="flex justify-end mb-4">
