@@ -283,9 +283,21 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 style={{ color: 'var(--color-accent)' }}
               />?
           </h2>
-          <p className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}>
+          <motion.p
+            initial={{ filter: 'blur(8px) brightness(0.5)', opacity: 0, y: 15 }}
+            whileInView={{ filter: 'blur(0px) brightness(1)', opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 1.2, delay: 1.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}
+          >
             Start tracking your finances today. No credit card, no download, no commitment.
-          </p>
+          </motion.p>
+          <motion.div
+            initial={{ filter: 'blur(6px) brightness(0.5)', opacity: 0, y: 10 }}
+            whileInView={{ filter: 'blur(0px) brightness(1)', opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.8, delay: 2.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
           <button
             onClick={login}
             className="btn-primary px-8 py-3.5 text-base"
@@ -299,6 +311,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
           >
             Get started free
           </button>
+          </motion.div>
         </motion.div>
       </motion.section>
 
