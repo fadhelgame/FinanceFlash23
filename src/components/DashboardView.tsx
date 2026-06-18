@@ -14,11 +14,10 @@ import {
   RefreshCw,
   ChevronRight,
   FileText,
+  Trash2,
   CheckSquare,
   Square,
 } from 'lucide-react'
-
-/* ---------- Export helpers ---------- */
 
 function exportCSV(transactions: Transaction[]) {
   const rows = [['Title', 'Amount', 'Category', 'Date', 'Type', 'Account ID']]
@@ -286,6 +285,23 @@ export default function DashboardView({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Import CSV
+                  </button>
+                  <div className="h-px my-1 mx-3" style={{ background: 'color-mix(in oklch, var(--color-warning) 20%, transparent)' }} />
+                  <button
+                    onClick={() => {
+                      setShowExport(false)
+                      if (confirm('⚠️ Delete ALL data?\n\nThis will permanently remove all accounts, transactions, and recurring transactions from your Google Drive. This cannot be undone.\n\nAre you sure?')) {
+                        if (confirm('Really delete everything? Type "yes" to confirm.')) {
+                          dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: new Date().toISOString() } })
+                          setTimeout(() => window.location.reload(), 300)
+                        }
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all"
+                    style={{ color: 'var(--color-warning)' }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete All Data
                   </button>
                 </div>
               </>
