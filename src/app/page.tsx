@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { VerticalCutReveal } from '@/components/VerticalCutReveal'
@@ -354,6 +354,111 @@ function exportPDF(transactions: Transaction[]) {
   win.print()
 }
 
+/* ---------- JSON Export / Import ---------- */
+
+function exportJSON(state: FinanceState) {
+  const data: FinanceData = {
+    accounts: state.accounts,
+    transactions: state.transactions,
+    recurringTransactions: state.recurringTransactions,
+    lastUpdated: new Date().toISOString(),
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `finance-flash-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function importJSON(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.Dispatch<any>) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const data: FinanceData = JSON.parse(e.target?.result as string)
+      if (!data.accounts && !data.transactions && !data.recurringTransactions) {
+        alert('Invalid backup file. Expected Finance Flash JSON backup.')
+        return
+      }
+      const count = (data.accounts?.length || 0) + (data.transactions?.length || 0) + (data.recurringTransactions?.length || 0)
+      if (confirm(`This will replace ALL current data with ${count} items from the backup.\n\nCurrent data will be lost. Continue?`)) {
+        dispatch({ type: 'SET_DATA', payload: { ...data, lastUpdated: new Date().toISOString() } })
+        alert(`Restored ${count} items successfully!`)
+      }
+    } catch {
+      alert('Invalid JSON file. Please select a valid Finance Flash backup.')
+    }
+  }
+  reader.readAsText(file)
+  // Reset so the same file can be selected again
+  event.target.value = ''
+}
+
+function importCSV(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.Dispatch<any>) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const text = e.target?.result as string
+      const lines = text.split('\n').filter(l => l.trim())
+      if (lines.length < 2) {
+        alert('CSV file must have a header row and at least one data row.')
+        return
+      }
+      const header = lines[0].toLowerCase()
+      if (!header.includes('title') || !header.includes('amount')) {
+        alert('CSV must have at least Title and Amount columns.')
+        return
+      }
+
+      const cols = lines[0].split(',').map(c => c.trim().toLowerCase().replace(/"/g, ''))
+      const titleIdx = cols.findIndex(c => c === 'title')
+      const amountIdx = cols.findIndex(c => c === 'amount')
+      const catIdx = cols.findIndex(c => c === 'category')
+      const dateIdx = cols.findIndex(c => c === 'date')
+      const typeIdx = cols.findIndex(c => c === 'type')
+
+      const parsed: Transaction[] = []
+      for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''))
+        const amount = parseInt(vals[amountIdx]?.replace(/[^0-9-]/g, '') || '0', 10)
+        if (!amount || isNaN(amount)) continue
+        const isIncome = vals[typeIdx]?.toLowerCase() === 'income' || vals[typeIdx]?.toLowerCase() === 'income'
+        parsed.push({
+          id: generateId(),
+          title: vals[titleIdx] || 'Imported',
+          amount: Math.abs(amount),
+          category: (vals[catIdx] as any) || 'Other',
+          date: vals[dateIdx] || new Date().toISOString().slice(0, 10),
+          isIncome,
+          accountId: null,
+          createdAt: new Date().toISOString(),
+        })
+      }
+
+      if (parsed.length === 0) {
+        alert('No valid transactions found in the CSV.')
+        return
+      }
+
+      if (confirm(`Add ${parsed.length} transaction${parsed.length > 1 ? 's' : ''} from CSV?`)) {
+        for (const tx of parsed) {
+          dispatch({ type: 'ADD_TRANSACTION', payload: tx })
+        }
+        alert(`Imported ${parsed.length} transaction${parsed.length > 1 ? 's' : ''}!`)
+      }
+    } catch {
+      alert('Failed to parse CSV. Make sure it matches the export format.')
+    }
+  }
+  reader.readAsText(file)
+  event.target.value = ''
+}
+
 /* =====================================================
    MAIN PAGE
    ===================================================== */
@@ -364,6 +469,8 @@ export default function DashboardPage() {
   const [showTxModal, setShowTxModal] = useState(false)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showExport, setShowExport] = useState(false)
+  const jsonInputRef = useRef<HTMLInputElement>(null)
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   const accounts = getActiveAccounts(state.accounts)
   const transactions = state.transactions
@@ -738,7 +845,7 @@ export default function DashboardPage() {
             {showExport && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowExport(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 card p-1 overflow-hidden" style={{ minWidth: '140px' }}>
+                <div className="absolute right-0 top-full mt-1 z-20 card p-1 overflow-hidden" style={{ minWidth: '180px' }}>
                   <button
                     onClick={() => { exportPDF(transactions); setShowExport(false) }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all" style={{ color: 'var(--color-ink-1)' }}
@@ -753,6 +860,34 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Export CSV
+                  </button>
+                  <button
+                    onClick={() => { exportJSON(state); setShowExport(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all" style={{ color: 'var(--color-ink-1)' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Backup JSON
+                  </button>
+                  <div className="h-px my-1 mx-3" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 8%, transparent)' }} />
+                  <button
+                    onClick={() => { jsonInputRef.current?.click(); setShowExport(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all" style={{ color: 'var(--color-ink-1)' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Restore JSON
+                  </button>
+                  <button
+                    onClick={() => { csvInputRef.current?.click(); setShowExport(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-paper-2)] rounded-lg transition-all" style={{ color: 'var(--color-ink-1)' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Import CSV
                   </button>
                 </div>
               </>
@@ -927,6 +1062,10 @@ export default function DashboardPage() {
           )}
         </section>
       </main>
+
+      {/* Hidden file inputs */}
+      <input ref={jsonInputRef} type="file" accept=".json" onChange={e => importJSON(e, dispatch)} className="hidden" />
+      <input ref={csvInputRef} type="file" accept=".csv" onChange={e => importCSV(e, dispatch)} className="hidden" />
 
       {/* FAB */}
       <button onClick={openAddTx} className="fab">
