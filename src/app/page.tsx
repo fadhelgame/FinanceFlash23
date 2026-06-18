@@ -2,12 +2,14 @@
 
 import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
-import LandingPage from '@/components/LandingPage'
-import DashboardView from '@/components/DashboardView'
+import dynamic from 'next/dynamic'
 import AddTransactionModal from '@/components/AddTransactionModal'
 import { useState } from 'react'
 import type { Transaction } from '@/lib/types'
 import { Plus } from 'lucide-react'
+
+const LandingPage = dynamic(() => import('@/components/LandingPage'), { ssr: false })
+const DashboardView = dynamic(() => import('@/components/DashboardView'), { ssr: false })
 
 export default function DashboardPage() {
   const { isAuthenticated, loading, userEmail, login } = useAuth()
