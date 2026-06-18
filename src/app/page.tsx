@@ -46,6 +46,8 @@ import {
   RefreshCw,
   ChevronRight,
   Clock,
+  CheckSquare,
+  Square,
 } from 'lucide-react'
 
 /* ---------- Icon/Color helpers ---------- */
@@ -421,6 +423,7 @@ function importCSV(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.D
       const catIdx = cols.findIndex(c => c === 'category')
       const dateIdx = cols.findIndex(c => c === 'date')
       const typeIdx = cols.findIndex(c => c === 'type')
+      const accountIdIdx = cols.findIndex(c => c === 'account id')
 
       const parsed: Transaction[] = []
       for (let i = 1; i < lines.length; i++) {
@@ -428,6 +431,7 @@ function importCSV(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.D
         const amount = parseInt(vals[amountIdx]?.replace(/[^0-9-]/g, '') || '0', 10)
         if (!amount || isNaN(amount)) continue
         const isIncome = vals[typeIdx]?.toLowerCase() === 'income' || vals[typeIdx]?.toLowerCase() === 'income'
+        const accountId = accountIdIdx >= 0 ? (vals[accountIdIdx] || null) : null
         parsed.push({
           id: generateId(),
           title: vals[titleIdx] || 'Imported',
@@ -435,7 +439,7 @@ function importCSV(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.D
           category: (vals[catIdx] as any) || 'Other',
           date: vals[dateIdx] || new Date().toISOString().slice(0, 10),
           isIncome,
-          accountId: null,
+          accountId,
           createdAt: new Date().toISOString(),
         })
       }
@@ -469,6 +473,9 @@ export default function DashboardPage() {
   const [showTxModal, setShowTxModal] = useState(false)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showExport, setShowExport] = useState(false)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set())
+  const [assignAccountId, setAssignAccountId] = useState('')
   const jsonInputRef = useRef<HTMLInputElement>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
 
@@ -1024,9 +1031,26 @@ export default function DashboardPage() {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="section-title" style={{ fontSize: 'var(--text-xl)', margin: 0 }}>Transactions</h2>
-            <Link href="/transactions" className="btn btn-ghost text-sm px-4 py-2">
-              See all
-            </Link>
+            <div className="flex items-center gap-2">
+              {selectMode ? (
+                <button
+                  onClick={() => { setSelectMode(false); setSelectedTxIds(new Set()) }}
+                  className="btn btn-ghost text-sm px-3 py-1.5"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  onClick={() => setSelectMode(true)}
+                  className="btn btn-ghost text-sm px-3 py-1.5"
+                >
+                  Manage
+                </button>
+              )}
+              <Link href="/transactions" className="btn btn-ghost text-sm px-4 py-2">
+                See all
+              </Link>
+            </div>
           </div>
           {latestTx.length === 0 ? (
             <div className="card text-center">
@@ -1034,33 +1058,106 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {latestTx.map(tx => (
-                <button
-                  key={tx.id}
-                  onClick={() => openEditTx(tx)}
-                  className="w-full card flex items-center gap-3 hover:scale-[1.01] transition-all text-left"
-                  style={{ padding: 'var(--space-md)' }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: `${CATEGORY_COLORS[tx.category]}33` }}
+              {latestTx.map(tx => {
+                const isSelected = selectedTxIds.has(tx.id)
+                return selectMode ? (
+                  <button
+                    key={tx.id}
+                    onClick={() => {
+                      const next = new Set(selectedTxIds)
+                      if (isSelected) next.delete(tx.id)
+                      else next.add(tx.id)
+                      setSelectedTxIds(next)
+                    }}
+                    className="w-full card flex items-center gap-3 hover:scale-[1.01] transition-all text-left"
+                    style={{ padding: 'var(--space-md)', borderColor: isSelected ? 'var(--color-accent)' : undefined, borderWidth: isSelected ? '1.5px' : undefined }}
                   >
-                    <CatIcon category={tx.category} className="w-5 h-5" style={{ color: CATEGORY_COLORS[tx.category] }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
-                    <p className="mono-label text-[10px]">
-                      {tx.category} &middot; {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                  <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
-                    {tx.isIncome ? '+' : '-'}{formatIDR(tx.amount)}
-                  </span>
-                </button>
-              ))}
+                    <div style={{ color: isSelected ? 'var(--color-accent)' : 'var(--color-ink-3)' }}>
+                      {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                    </div>
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: `${CATEGORY_COLORS[tx.category]}33` }}
+                    >
+                      <CatIcon category={tx.category} className="w-5 h-5" style={{ color: CATEGORY_COLORS[tx.category] }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
+                      <p className="mono-label text-[10px]">
+                        {tx.category} &middot; {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
+                      {tx.isIncome ? '+' : '-'}{formatIDR(tx.amount)}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    key={tx.id}
+                    onClick={() => openEditTx(tx)}
+                    className="w-full card flex items-center gap-3 hover:scale-[1.01] transition-all text-left"
+                    style={{ padding: 'var(--space-md)' }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: `${CATEGORY_COLORS[tx.category]}33` }}
+                    >
+                      <CatIcon category={tx.category} className="w-5 h-5" style={{ color: CATEGORY_COLORS[tx.category] }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--color-ink-0)' }}>{tx.title}</p>
+                      <p className="mono-label text-[10px]">
+                        {tx.category} &middot; {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-semibold shrink-0 ${tx.isIncome ? 'text-income' : 'text-expense'}`}>
+                      {tx.isIncome ? '+' : '-'}{formatIDR(tx.amount)}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           )}
         </section>
+
+        {/* Batch-assign bar */}
+        {selectMode && selectedTxIds.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 card flex items-center gap-3 px-5 py-3 shadow-lg" style={{ minWidth: '320px' }}>
+            <span className="text-sm font-medium shrink-0" style={{ color: 'var(--color-ink-0)' }}>
+              {selectedTxIds.size} selected
+            </span>
+            <select
+              value={assignAccountId}
+              onChange={e => setAssignAccountId(e.target.value)}
+              className="flex-1 text-sm rounded-lg px-3 py-1.5"
+              style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)', border: '1px solid color-mix(in oklch, var(--color-ink-0) 12%, transparent)' }}
+            >
+              <option value="">— Pick account —</option>
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                if (!assignAccountId) { alert('Please select an account.'); return }
+                const count = selectedTxIds.size
+                selectedTxIds.forEach(id => {
+                  const tx = transactions.find(t => t.id === id)
+                  if (tx) {
+                    dispatch({ type: 'UPDATE_TRANSACTION', payload: { ...tx, accountId: assignAccountId } })
+                  }
+                })
+                setSelectedTxIds(new Set())
+                setAssignAccountId('')
+                setSelectMode(false)
+                alert(`Moved ${count} transaction${count > 1 ? 's' : ''} to ${accounts.find(a => a.id === assignAccountId)?.name || 'account'}.`)
+              }}
+              className="btn-primary text-sm px-4 py-1.5 shrink-0"
+            >
+              Assign
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Hidden file inputs */}
