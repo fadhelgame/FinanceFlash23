@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/callback'
 
 export async function GET(request: NextRequest) {
   try {
     const code = request.nextUrl.searchParams.get('code')
-    const origin = new URL(request.url).origin
-    const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${origin}/api/auth/callback`
 
     if (!code) {
       return NextResponse.json({ error: 'Missing authorization code' }, { status: 400 })
@@ -20,7 +19,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Exchange authorization code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -40,21 +38,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to exchange authorization code' }, { status: 400 })
     }
 
-    // Get user email using the access token
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     })
     const user = await userResponse.json()
 
-    // Redirect to home with cookies set
     const response = NextResponse.redirect(new URL('/', request.url))
 
-    // Set HTTP-only cookie with tokens
     response.cookies.set('google_tokens', JSON.stringify(tokens), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
       path: '/',
     })
 
