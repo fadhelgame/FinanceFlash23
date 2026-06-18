@@ -6,7 +6,7 @@ export async function GET() {
     let tokens = await getTokens()
     if (!tokens) return NextResponse.json(null)
 
-    if (tokens.expiry_date && Date.now() > tokens.expiry_date * 1000) {
+    if (tokens.expiry_date && Date.now() > tokens.expiry_date) {
       const refreshed = await refreshAccessToken(tokens)
       if (!refreshed) return NextResponse.json(null)
       tokens = refreshed

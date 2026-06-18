@@ -362,7 +362,7 @@ function importCSV(event: React.ChangeEvent<HTMLInputElement>, dispatch: React.D
         const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''))
         const amount = parseInt(vals[amountIdx]?.replace(/[^0-9-]/g, '') || '0', 10)
         if (!amount || isNaN(amount)) continue
-        const isIncome = vals[typeIdx]?.toLowerCase() === 'income' || vals[typeIdx]?.toLowerCase() === 'income'
+                    const isIncome = vals[typeIdx]?.toLowerCase() === 'income'
         const accountId = accountIdIdx >= 0 ? (vals[accountIdIdx] || null) : null
         parsed.push({
           id: generateId(),

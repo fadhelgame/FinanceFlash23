@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 
 interface AuthState {
   isAuthenticated: boolean
@@ -61,8 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth({ isAuthenticated: false, userEmail: null, loading: false })
   }, [])
 
+  const value = useMemo(() => ({ ...auth, login, logout }), [auth, login, logout])
+
   return (
-    <AuthContext.Provider value={{ ...auth, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

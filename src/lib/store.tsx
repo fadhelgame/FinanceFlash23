@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useState } from 'react'
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { Account, Transaction, RecurringTransaction, FinanceData } from './types'
 import { processRecurring, generateId } from './types'
 
@@ -244,8 +244,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     loadFromSource()
   }, [loadFromSource])
 
+  const contextValue = useMemo(() => ({ state, dispatch, saveToDrive, loadFromSource, saving, lastSaved }), [state, dispatch, saveToDrive, loadFromSource, saving, lastSaved])
+
   return (
-    <FinanceContext.Provider value={{ state, dispatch, saveToDrive, loadFromSource, saving, lastSaved }}>
+    <FinanceContext.Provider value={contextValue}>
       {children}
     </FinanceContext.Provider>
   )

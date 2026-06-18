@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     let tokens = await getTokens()
     if (!tokens) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    if (tokens.expiry_date && Date.now() > tokens.expiry_date * 1000) {
+    if (tokens.expiry_date && Date.now() > tokens.expiry_date) {
       const refreshed = await refreshAccessToken(tokens)
       if (!refreshed) return NextResponse.json({ error: 'Session expired. Please sign in again.' }, { status: 401 })
       tokens = refreshed

@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -6,6 +7,15 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/a
 
 export async function GET(request: NextRequest) {
   try {
+    const state = request.nextUrl.searchParams.get('state')
+    const cookieStore = await cookies()
+    const savedState = cookieStore.get('oauth_state')?.value
+    cookieStore.delete('oauth_state')
+
+    if (!state || !savedState || state !== savedState) {
+      return NextResponse.json({ error: 'Invalid state parameter' }, { status: 400 })
+    }
+
     const code = request.nextUrl.searchParams.get('code')
 
     if (!code) {

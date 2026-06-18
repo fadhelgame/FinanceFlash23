@@ -6,30 +6,8 @@ import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
 import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
 import type { Account, AccountType } from '@/lib/types'
-import { Banknote, Wallet, ArrowLeftRight, CreditCard, Smartphone, Shield, Plus, ArrowLeft, Check } from 'lucide-react'
-
-const ACCOUNT_TYPE_COLORS: Record<AccountType, string> = {
-  Cash: '#22c55e',
-  Bank: '#3b82f6',
-  'Credit Card': '#f97316',
-  Loan: '#ef4444',
-  'E-Wallet': '#a855f7',
-  Savings: '#14b8a6',
-}
-
-function AcctIcon({ type, className, style }: { type: AccountType; className?: string; style?: React.CSSProperties }) {
-  const iconName = ACCOUNT_ICONS[type]
-  const props = { className: className || 'w-5 h-5', style: style || { color: 'var(--color-ink-0)' } }
-  switch (iconName) {
-    case 'banknote': return <Banknote {...props} />
-    case 'building': return <Wallet {...props} />
-    case 'credit-card': return <CreditCard {...props} />
-    case 'arrow-left-right': return <ArrowLeftRight {...props} />
-    case 'smartphone': return <Smartphone {...props} />
-    case 'shield': return <Shield {...props} />
-    default: return <Wallet {...props} />
-  }
-}
+import { ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
+import { Wallet, Plus, Check } from 'lucide-react'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   Cash: 'Cash',
