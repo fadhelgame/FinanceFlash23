@@ -183,6 +183,7 @@ export default function DashboardView({
   onEditTx,
   onAddTx,
   isDemoMode,
+  onExitDemo,
 }: {
   state: FinanceState
   dispatch: React.Dispatch<any>
@@ -190,6 +191,7 @@ export default function DashboardView({
   onEditTx: (tx: Transaction) => void
   onAddTx: () => void
   isDemoMode?: boolean
+  onExitDemo?: () => void
 }) {
   const [showExport, setShowExport] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
@@ -223,7 +225,7 @@ export default function DashboardView({
 
   return (
     <div className="pb-24">
-      <NavBar />
+      <NavBar isDemoMode={isDemoMode} onExitDemo={onExitDemo} />
 
       {isDemoMode && (
         <div className="section pt-4 pb-0">

@@ -14,18 +14,33 @@ const links = [
   { href: '/recurring', label: 'Recurring', icon: RefreshCw },
 ]
 
-export default function NavBar() {
+export default function NavBar({ isDemoMode, onExitDemo }: { isDemoMode?: boolean; onExitDemo?: () => void }) {
   const pathname = usePathname()
   const { isAuthenticated, userEmail, login, logout } = useAuth()
-  const { saving, lastSaved, saveToDrive } = useFinanceStore()
+  const { saving, lastSaved, saveToDrive: storeSaveToDrive } = useFinanceStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [expanded, setExpanded] = useState(true)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
 
+  const showAuthed = isAuthenticated || isDemoMode
+
   const handleManualSave = async () => {
-    const ok = await saveToDrive()
+    if (isDemoMode) {
+      setSaveMsg('Demo ✱')
+      setTimeout(() => setSaveMsg(null), 2000)
+      return
+    }
+    const ok = await storeSaveToDrive()
     setSaveMsg(ok ? 'Saved ✓' : 'Save failed')
     setTimeout(() => setSaveMsg(null), 2000)
+  }
+
+  const handleLogout = () => {
+    if (isDemoMode) {
+      onExitDemo?.()
+    } else {
+      logout()
+    }
   }
 
   return (
@@ -57,7 +72,7 @@ export default function NavBar() {
       <div className="hidden sm:block h-5 w-px shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
 
       {/* Desktop nav links */}
-      {isAuthenticated && (
+      {showAuthed && (
         <div className="hidden sm:flex items-center gap-0.5">
           {links.map((link) => {
             const Icon = link.icon
@@ -97,7 +112,7 @@ export default function NavBar() {
       )}
 
       {/* Toggle expand button — desktop */}
-      {isAuthenticated && (
+      {showAuthed && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="hidden sm:flex items-center justify-center rounded-xl transition-all shrink-0"
@@ -128,7 +143,7 @@ export default function NavBar() {
 
       {/* Right side */}
       <div className="hidden sm:flex items-center gap-1.5">
-        {isAuthenticated ? (
+        {showAuthed ? (
           <>
             {/* Sync status indicator */}
             <div className="flex items-center gap-1.5 px-2 py-1.5">
@@ -159,16 +174,14 @@ export default function NavBar() {
 
             <div className="flex items-center gap-1.5 px-2 py-1.5">
               <span className="live-dot" />
-              <span className="mono-label hidden lg:inline">LIVE</span>
+              <span className="mono-label hidden lg:inline">{isDemoMode ? 'DEMO' : 'LIVE'}</span>
             </div>
             <div className="h-5 w-px shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
-            {userEmail && (
-              <span className="text-xs truncate max-w-[90px] px-2 py-1.5 rounded-xl" style={{ color: 'var(--color-ink-3)' }}>
-                {userEmail}
-              </span>
-            )}
+            <span className="text-xs truncate max-w-[90px] px-2 py-1.5 rounded-xl" style={{ color: 'var(--color-ink-3)' }}>
+              {isDemoMode ? 'Demo' : userEmail}
+            </span>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-medium transition-all"
               style={{ color: 'var(--color-ink-2)' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-paper-2)' }}
@@ -213,7 +226,7 @@ export default function NavBar() {
             boxShadow: 'rgba(20,30,80,0.25) 0px 24px 60px -28px, rgba(20,30,80,0.08) 0px 4px 12px -4px',
           }}
         >
-          {isAuthenticated ? (
+          {showAuthed ? (
             <>
               {links.map((link) => {
                 const Icon = link.icon
@@ -243,11 +256,9 @@ export default function NavBar() {
                 </button>
                 <span className="flex-1" />
                 <span className="live-dot" />
-                <span className="mono-label text-[10px]">LIVE</span>
-                {userEmail && (
-                  <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--color-ink-3)' }}>{userEmail}</span>
-                )}
-                <button onClick={logout} className="flex items-center justify-center p-1.5 rounded-xl" style={{ color: 'var(--color-ink-2)' }}>
+                <span className="mono-label text-[10px]">{isDemoMode ? 'DEMO' : 'LIVE'}</span>
+                <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--color-ink-3)' }}>{isDemoMode ? 'Demo' : userEmail}</span>
+                <button onClick={handleLogout} className="flex items-center justify-center p-1.5 rounded-xl" style={{ color: 'var(--color-ink-2)' }}>
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>

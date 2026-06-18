@@ -27,6 +27,12 @@ export default function DashboardPage() {
     }
   }
 
+  const handleExitDemo = () => {
+    setDemoMode(false)
+    demoInjectedRef.current = false
+    dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: '' } })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -56,6 +62,7 @@ export default function DashboardPage() {
           onEditTx={(tx) => { setEditingTx(tx); setShowTxModal(true) }}
           onAddTx={() => { setEditingTx(null); setShowTxModal(true) }}
           isDemoMode={isDemoMode}
+          onExitDemo={handleExitDemo}
         />
         {!isDemoMode && (
           <AddTransactionModal
