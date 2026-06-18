@@ -94,11 +94,11 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 staggerFrom="first"
                 transition={{ type: "spring", stiffness: 190, damping: 22 }}
                 containerClassName="block"
-                wordLevelClassName="inline-flex overflow-hidden pb-1"
+                wordLevelClassName="inline-flex overflow-hidden"
               >
                 Track your
               </VerticalCutReveal>
-              <br className="sm:hidden" />
+              <span className="sm:hidden block h-0 leading-none" />
               <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
@@ -107,10 +107,15 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                 containerClassName="inline-flex"
                 wordLevelClassName="inline-flex overflow-hidden"
               >
-                money in a
-              </VerticalCutReveal>{' '}
-              <br className="sm:hidden" />
-              <VerticalCutReveal
+                money in
+              </VerticalCutReveal>
+              <span className="sm:hidden block h-0 leading-none" />
+              <span className="inline-flex items-baseline gap-1">
+                <span
+                  className="inline-flex"
+                  style={{ color: 'var(--color-ink-0)' }}
+                >a </span>
+                <VerticalCutReveal
                 splitBy="characters"
                 staggerDuration={0.06}
                 staggerFrom="first"
@@ -122,6 +127,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
               >
                 flash
               </VerticalCutReveal>
+              </span>
             </motion.h1>
 
             <motion.p
