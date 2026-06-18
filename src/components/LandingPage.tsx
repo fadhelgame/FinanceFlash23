@@ -322,7 +322,7 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
           </div>
 
           {/* Mobile: Carousel */}
-          <div className="sm:hidden relative overflow-hidden" style={{ minHeight: '280px' }}>
+          <div className="sm:hidden relative overflow-hidden" style={{ minHeight: '224px' }}>
             <div
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -338,14 +338,14 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
                   animate="center"
                   exit="exit"
                   transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.3 } }}
-                  className="card p-6"
+                  className="card p-4"
                   style={{ cursor: 'default', touchAction: 'pan-y' }}
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center mb-4" style={{ background: `${featuresData[currentIndex].color}1F` }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: `${featuresData[currentIndex].color}1F` }}>
                     <span style={{ color: featuresData[currentIndex].color }}>{featuresData[currentIndex].icon}</span>
                   </div>
-                  <h3 className="text-[22px] font-semibold mb-2" style={{ color: 'var(--color-ink-0)' }}>{featuresData[currentIndex].title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--color-ink-1)' }}>{featuresData[currentIndex].desc}</p>
+                  <h3 className="text-[18px] font-semibold mb-1" style={{ color: 'var(--color-ink-0)' }}>{featuresData[currentIndex].title}</h3>
+                  <p className="text-xs line-clamp-2" style={{ color: 'var(--color-ink-1)' }}>{featuresData[currentIndex].desc}</p>
                 </motion.div>
               </AnimatePresence>
             </div>
