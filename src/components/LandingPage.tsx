@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { VerticalCutReveal } from '@/components/VerticalCutReveal'
+import CinematicText from '@/components/CinematicText'
 import Link from 'next/link'
 import {
   Wallet,
@@ -274,8 +275,13 @@ export default function LandingPage({ login }: { login: () => Promise<void> }) {
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.22, 0.61, 0.36, 1], delay: 0.1 }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            Ready to <span className="italic-accent" style={{ color: 'var(--color-accent)' }}>take control</span>?
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <CinematicText
+                text="Ready to take control"
+                accent="control"
+                accentClassName="italic-accent"
+                style={{ color: 'var(--color-accent)' }}
+              />?
           </h2>
           <p className="text-base sm:text-lg mb-8" style={{ opacity: 0.8 }}>
             Start tracking your finances today. No credit card, no download, no commitment.
