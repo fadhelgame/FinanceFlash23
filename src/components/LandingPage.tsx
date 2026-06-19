@@ -144,7 +144,7 @@ export default function LandingPage({ login, onDemo }: { login: () => Promise<vo
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
-              className="text-lg max-w-md mb-8"
+              className="text-md sm:text-lg max-w-md mb-8"
               style={{ color: 'var(--color-ink-1)' }}
             >
               Finance Flash is a personal finance tracker that works on any device. 
