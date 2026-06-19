@@ -107,37 +107,51 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [state])
 
-  // Fire Drive save in background on every change (500ms debounce)
+  // Fire Turso save in background on every change (fire-and-forget)
+  const tursoTimerRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
     if (!state.loaded) return
     if (isDemoMode) return
 
-    // Debounce: clear previous timer
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    const data = getFinanceData(state)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 
-    saveTimerRef.current = setTimeout(async () => {
-      if (savingRef.current) return
-      savingRef.current = true
-      setSaving(true)
+    // Fire-and-forget Turso save (no debounce — Turso is fast)
+    import('./turso').then(m => {
+      const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
+      if (email) {
+        fetch('/api/turso/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: decodeURIComponent(email), data }),
+        }).catch(() => {})
+      }
+    }).catch(() => {})
 
-      const data = getFinanceData(state)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    setLastSaved(new Date().toLocaleTimeString('id-ID'))
+  }, [state])
+
+  // Batch sync to Drive every 5 minutes
+  useEffect(() => {
+    if (!state.loaded || isDemoMode) return
+
+    const interval = setInterval(async () => {
       try {
         const { saveToDrive: apiSave } = await import('./google-drive')
-        await apiSave(data)
-        setSaving(false)
-        savingRef.current = false
-        setLastSaved(new Date().toLocaleTimeString('id-ID'))
+        const data = getFinanceData(stateRef.current)
+        // Only sync if we have data
+        if (data.accounts.length > 0 || data.transactions.length > 0 || data.recurringTransactions.length > 0) {
+          setSaving(true)
+          await apiSave(data)
+          setSaving(false)
+        }
       } catch {
         setSaving(false)
-        savingRef.current = false
       }
-    }, 500)
+    }, 5 * 60 * 1000) // 5 minutes
 
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    }
-  }, [state])
+    return () => clearInterval(interval)
+  }, [state.loaded])
 
   // Save on tab close / hide
   useEffect(() => {
