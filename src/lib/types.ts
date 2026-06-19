@@ -172,7 +172,11 @@ export function processRecurring(
       newTransactions.push(tx);
 
       const next = new Date(nextDue);
+      const dayOfMonth = next.getDate();
       next.setMonth(next.getMonth() + 1);
+      if (next.getDate() !== dayOfMonth) {
+        next.setDate(0); // roll back to last day of previous month
+      }
       updatedRecurring.push({
         ...recurring,
         nextDueDate: next.toISOString(),

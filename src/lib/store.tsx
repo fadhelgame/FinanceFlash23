@@ -108,13 +108,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   }, [state])
 
   // Fire Turso save in background on every change (fire-and-forget)
-  const tursoTimerRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
     if (!state.loaded) return
     if (isDemoMode) return
 
     const data = getFinanceData(state)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 
     // Fire-and-forget Turso save (no debounce — Turso is fast)
     const email = document.cookie.match(/google_email=([^;]+)/)?.[1]

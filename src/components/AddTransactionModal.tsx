@@ -44,9 +44,6 @@ export default function AddTransactionModal({
     category: initial.category,
     date: initial.date.slice(0, 10),
   } : emptyTxForm())
-  const [show, setShow] = useState(open)
-
-  useState(() => { setShow(open) })
 
   if (!open) return null
 
