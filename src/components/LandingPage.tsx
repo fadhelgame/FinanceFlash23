@@ -343,11 +343,9 @@ export default function LandingPage({ login, onDemo }: { login: () => Promise<vo
                     boxShadow: 'rgba(20,30,80,0.12) 0px 4px 12px -4px',
                   }}
                   onClick={() => {
-                    const el = document.querySelector('[data-slot=\"carousel\"]');
-                    if (el) {
-                      const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
-                      el.dispatchEvent(event);
-                    }
+                    document.querySelector('[data-slot="carousel"]')?.dispatchEvent(
+                      new KeyboardEvent('keydown', { key: 'ArrowLeft' })
+                    );
                   }}
                   aria-label="Previous slide"
                 >
@@ -368,11 +366,9 @@ export default function LandingPage({ login, onDemo }: { login: () => Promise<vo
                     boxShadow: 'rgba(20,30,80,0.12) 0px 4px 12px -4px',
                   }}
                   onClick={() => {
-                    const el = document.querySelector('[data-slot=\"carousel\"]');
-                    if (el) {
-                      const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
-                      el.dispatchEvent(event);
-                    }
+                    document.querySelector('[data-slot="carousel"]')?.dispatchEvent(
+                      new KeyboardEvent('keydown', { key: 'ArrowRight' })
+                    );
                   }}
                   aria-label="Next slide"
                 >

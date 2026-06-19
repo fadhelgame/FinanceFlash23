@@ -117,16 +117,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 
     // Fire-and-forget Turso save (no debounce — Turso is fast)
-    import('./turso').then(m => {
-      const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
-      if (email) {
-        fetch('/api/turso/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: decodeURIComponent(email), data }),
-        }).catch(() => {})
-      }
-    }).catch(() => {})
+    const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
+    if (email) {
+      fetch('/api/turso/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: decodeURIComponent(email), data }),
+      }).catch(() => {})
+    }
 
     setLastSaved(new Date().toLocaleTimeString('id-ID'))
   }, [state])

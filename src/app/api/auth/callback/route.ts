@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     })
 
     response.cookies.set('google_email', user.email, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30,
