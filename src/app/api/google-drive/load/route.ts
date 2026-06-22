@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server'
-import { FILE_NAME, getTokens, refreshAccessToken } from '@/lib/google-oauth'
+import { FILE_NAME, getValidTokens } from '@/lib/google-oauth'
 
 export async function GET() {
   try {
-    let tokens = await getTokens()
+    const tokens = await getValidTokens()
     if (!tokens) return NextResponse.json(null)
-
-    if (tokens.expiry_date && Date.now() > tokens.expiry_date) {
-      const refreshed = await refreshAccessToken(tokens)
-      if (!refreshed) return NextResponse.json(null)
-      tokens = refreshed
-    }
 
     const searchResponse = await fetch(
       `https://www.googleapis.com/drive/v3/files?q=name='${FILE_NAME}' and trashed=false&fields=files(id,name)`,

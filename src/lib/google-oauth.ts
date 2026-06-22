@@ -56,3 +56,22 @@ export async function saveTokens(tokens: Tokens) {
     maxAge: 365 * 24 * 60 * 60,
   })
 }
+
+// Shared: get tokens from cookie, auto-refresh if expired, save refreshed tokens back.
+// Returns null if not authenticated or refresh fails.
+export async function getValidTokens(): Promise<Tokens | null> {
+  let tokens = await getTokens()
+  if (!tokens) return null
+
+  // Refresh if expired (5-min buffer to avoid edge-case races)
+  const now = Date.now()
+  const expiry = tokens.expiry_date ?? 0
+  if (expiry && now > expiry - 5 * 60 * 1000) {
+    const refreshed = await refreshAccessToken(tokens)
+    if (!refreshed) return null
+    tokens = refreshed
+    await saveTokens(tokens) // persist refreshed tokens back to cookie
+  }
+
+  return tokens
+}

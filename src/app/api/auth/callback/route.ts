@@ -48,14 +48,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to exchange authorization code' }, { status: 400 })
     }
 
+    // Normalize: Google returns expires_in (seconds), we store expiry_date (timestamp ms)
+    const normalizedTokens = {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expiry_date: Date.now() + (tokens.expires_in || 3600) * 1000,
+      scope: tokens.scope,
+      token_type: tokens.token_type,
+    }
+
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      headers: { Authorization: `Bearer ${normalizedTokens.access_token}` },
     })
     const user = await userResponse.json()
 
     const response = NextResponse.redirect(new URL('/', request.url))
 
-    response.cookies.set('google_tokens', JSON.stringify(tokens), {
+    response.cookies.set('google_tokens', JSON.stringify(normalizedTokens), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
