@@ -160,16 +160,18 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       )
     }
 
-    window.addEventListener('beforeunload', handleSave)
-    document.addEventListener('visibilitychange', () => {
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         handleSave()
       }
-    })
+    }
+
+    window.addEventListener('beforeunload', handleSave)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       window.removeEventListener('beforeunload', handleSave)
-      document.removeEventListener('visibilitychange', handleSave)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 

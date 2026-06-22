@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFinanceStore } from '@/lib/store'
 import { CATEGORIES, generateId } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
@@ -36,14 +36,23 @@ export default function AddTransactionModal({
   initial?: Transaction | null
 }) {
   const { state } = useFinanceStore()
-  const [form, setForm] = useState<TxForm>(initial ? {
-    isIncome: initial.isIncome,
-    amount: String(initial.amount),
-    title: initial.title,
-    accountId: initial.accountId,
-    category: initial.category,
-    date: initial.date.slice(0, 10),
-  } : emptyTxForm())
+  const [form, setForm] = useState<TxForm>(emptyTxForm())
+
+  // Sync form when initial changes (editing different transactions)
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        isIncome: initial.isIncome,
+        amount: String(initial.amount),
+        title: initial.title,
+        accountId: initial.accountId,
+        category: initial.category,
+        date: initial.date.slice(0, 10),
+      })
+    } else {
+      setForm(emptyTxForm())
+    }
+  }, [initial])
 
   if (!open) return null
 

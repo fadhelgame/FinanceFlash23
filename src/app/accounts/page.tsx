@@ -7,7 +7,7 @@ import { useFinanceStore } from '@/lib/store'
 import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
 import type { Account, AccountType } from '@/lib/types'
 import { ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
-import { Wallet, Plus, Check, Trash2, CheckSquare, Square } from 'lucide-react'
+import { Wallet, Plus, Check, Trash2, CheckSquare, Square, Pencil } from 'lucide-react'
 import AuthGuard from '@/components/AuthGuard'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -133,6 +133,8 @@ export default function AccountsPage() {
   const [tab, setTab] = useState<'active' | 'settled'>('active')
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [renamingAccount, setRenamingAccount] = useState<Account | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
   const transactions = state.transactions
   const activeAccounts = getActiveAccounts(state.accounts)
@@ -308,12 +310,31 @@ export default function AccountsPage() {
         )}
       </main>
 
-      {/* Batch delete bar */}
+      {/* Batch action bar */}
       {selectMode && selectedIds.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 card flex items-center gap-3 px-5 py-3 shadow-lg">
           <span className="text-sm font-medium shrink-0" style={{ color: 'var(--color-ink-0)' }}>
             {selectedIds.size} selected
           </span>
+          {selectedIds.size === 1 && (
+            <button
+              onClick={() => {
+                const acc = activeAccounts.find(a => selectedIds.has(a.id)) || settledAccounts.find(a => selectedIds.has(a.id))
+                if (acc) {
+                  setRenamingAccount(acc)
+                  setRenameValue(acc.name)
+                }
+              }}
+              className="text-sm px-4 py-1.5 shrink-0 rounded-xl font-medium transition-all flex items-center gap-1.5"
+              style={{ color: 'var(--color-accent)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in oklch, var(--color-accent) 10%, transparent)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Rename
+            </button>
+          )}
+          <div className="w-px h-6 shrink-0" style={{ background: 'color-mix(in oklch, var(--color-ink-0) 10%, transparent)' }} />
           <button
             onClick={() => {
               const count = selectedIds.size
@@ -331,6 +352,49 @@ export default function AccountsPage() {
             <Trash2 className="w-3.5 h-3.5" />
             Delete
           </button>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      {renamingAccount && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRenamingAccount(null)} />
+          <div className="relative w-full max-w-md card rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up" style={{ background: 'var(--color-paper-0)' }}>
+            <h2 className="text-lg font-semibold mb-6" style={{ color: 'var(--color-ink-0)' }}>Rename Account</h2>
+            <div className="mb-6">
+              <label className="mono-label mb-2 block">Account Name</label>
+              <input
+                type="text"
+                autoFocus
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && renameValue.trim()) {
+                    dispatch({ type: 'UPDATE_ACCOUNT', payload: { ...renamingAccount, name: renameValue.trim() } })
+                    setRenamingAccount(null)
+                    setSelectedIds(new Set())
+                    setSelectMode(false)
+                  }
+                }}
+                className="w-full rounded-xl px-4 py-3 outline-none" style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }}
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setRenamingAccount(null)} className="btn-ghost flex-1 py-3">Cancel</button>
+              <button
+                onClick={() => {
+                  if (!renameValue.trim()) return
+                  dispatch({ type: 'UPDATE_ACCOUNT', payload: { ...renamingAccount, name: renameValue.trim() } })
+                  setRenamingAccount(null)
+                  setSelectedIds(new Set())
+                  setSelectMode(false)
+                }}
+                className="btn-primary flex-1 py-3"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {/* FAB */}

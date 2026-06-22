@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
@@ -44,19 +44,24 @@ function RecurringFormModal({
   onClose: () => void
 }) {
   const { state } = useFinanceStore()
-  const [form, setForm] = useState<RForm>(
-    initial
-      ? {
-          isIncome: initial.isIncome,
-          amount: String(initial.amount),
-          title: initial.title,
-          dayOfMonth: initial.dayOfMonth,
-          category: initial.category,
-          accountId: initial.accountId,
-          isActive: initial.isActive,
-        }
-      : emptyForm()
-  )
+  const [form, setForm] = useState<RForm>(emptyForm())
+
+  // Sync form when initial changes (editing different recurring items)
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        isIncome: initial.isIncome,
+        amount: String(initial.amount),
+        title: initial.title,
+        dayOfMonth: initial.dayOfMonth,
+        category: initial.category,
+        accountId: initial.accountId,
+        isActive: initial.isActive,
+      })
+    } else {
+      setForm(emptyForm())
+    }
+  }, [initial])
 
   if (!open) return null
 
