@@ -28,6 +28,9 @@ export async function GET() {
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
     access_type: 'offline',
+    // Google only issues a refresh_token on the first consent; without it the
+    // session dies after 1 hour. Force consent so every login gets one.
+    prompt: 'consent',
   })
   params.set('state', state)
 

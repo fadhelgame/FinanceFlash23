@@ -48,10 +48,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to exchange authorization code' }, { status: 400 })
     }
 
+    // Google omits refresh_token on repeat logins — keep the one we already have,
+    // otherwise the session silently dies when the access token expires.
+    let existingRefreshToken: string | undefined
+    const existingCookie = cookieStore.get('google_tokens')?.value
+    if (existingCookie) {
+      try {
+        existingRefreshToken = JSON.parse(existingCookie).refresh_token
+      } catch {
+        // ignore corrupt cookie
+      }
+    }
+
     // Normalize: Google returns expires_in (seconds), we store expiry_date (timestamp ms)
     const normalizedTokens = {
       access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
+      refresh_token: tokens.refresh_token || existingRefreshToken,
       expiry_date: Date.now() + (tokens.expires_in || 3600) * 1000,
       scope: tokens.scope,
       token_type: tokens.token_type,
@@ -64,11 +76,15 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.redirect(new URL('/', request.url))
 
+    // 1 year, matching saveTokens() — every token refresh re-extends this,
+    // so the session effectively never expires on an active device.
+    const COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+
     response.cookies.set('google_tokens', JSON.stringify(normalizedTokens), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: COOKIE_MAX_AGE,
       path: '/',
     })
 
@@ -76,7 +92,7 @@ export async function GET(request: NextRequest) {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: COOKIE_MAX_AGE,
       path: '/',
     })
 
