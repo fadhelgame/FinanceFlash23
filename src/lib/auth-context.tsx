@@ -15,6 +15,13 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+function readEmailCookie(): string | null {
+  const match = document.cookie.match(/google_email=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({
     isAuthenticated: false,
@@ -22,24 +29,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading: true,
   })
 
-  useEffect(() => {
-    checkStatus()
+  const checkStatus = useCallback(async () => {
+    const { checkAuth } = await import('./google-drive')
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await sleep(500 * 2 ** (attempt - 1))
+      try {
+        const status = await checkAuth()
+        setAuth({
+          isAuthenticated: status.authenticated,
+          userEmail: status.email || null,
+          loading: false,
+        })
+        return
+      } catch {
+        // network / server unreachable — retry
+      }
+    }
+
+    // Every retry failed, which says nothing about whether the session is
+    // valid. Fall back to the email cookie: if it is still there the user was
+    // signed in and stays signed in. Only an explicit logout, or Google
+    // reporting the grant as revoked, ends a session.
+    console.warn('Auth check unreachable — keeping existing session')
+    const email = readEmailCookie()
+    setAuth({
+      isAuthenticated: !!email,
+      userEmail: email,
+      loading: false,
+    })
   }, [])
 
-  async function checkStatus() {
-    try {
-      const { checkAuth } = await import('./google-drive')
-      const status = await checkAuth()
-      setAuth({
-        isAuthenticated: status.authenticated,
-        userEmail: status.email || null,
-        loading: false,
-      })
-    } catch {
-      console.warn('Auth check failed');
-      setAuth({ isAuthenticated: false, userEmail: null, loading: false })
+  useEffect(() => {
+    // Initial session probe. Every setState inside checkStatus happens after an
+    // await, so this is not a synchronous update in the effect body — the rule
+    // cannot see through the async boundary.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkStatus()
+  }, [checkStatus])
+
+  // Re-check when the tab comes back, so a session that was revoked elsewhere
+  // is noticed without waiting for a reload.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') checkStatus()
     }
-  }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [checkStatus])
 
   const login = useCallback(async () => {
     try {

@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { SESSION_MAX_AGE } from '@/lib/google-oauth'
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
@@ -76,9 +77,9 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.redirect(new URL('/', request.url))
 
-    // 1 year, matching saveTokens() — every token refresh re-extends this,
-    // so the session effectively never expires on an active device.
-    const COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+    // Every token refresh and status check re-extends this, so the session
+    // effectively never expires on a device that gets used.
+    const COOKIE_MAX_AGE = SESSION_MAX_AGE
 
     response.cookies.set('google_tokens', JSON.stringify(normalizedTokens), {
       httpOnly: true,
