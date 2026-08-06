@@ -8,6 +8,11 @@ interface FinanceState {
   accounts: Account[]
   transactions: Transaction[]
   recurringTransactions: RecurringTransaction[]
+  // When the data itself last changed — not when it was last serialised. The
+  // cross-device merge picks the freshest snapshot by this value, so stamping it
+  // on any write would let a device that merely opened the app claim to hold
+  // newer data than the device that actually edited something.
+  lastUpdated: string
   loaded: boolean
 }
 
@@ -26,9 +31,22 @@ type Action =
   | { type: 'UPDATE_MULTIPLE_RECURRING'; payload: RecurringTransaction[] }
 
 function reducer(state: FinanceState, action: Action): FinanceState {
+  const next = applyAction(state, action)
+  // SET_DATA adopts a snapshot wholesale and must keep that snapshot's own
+  // timestamp. Every other action is a real edit, so it advances the clock.
+  if (action.type === 'SET_DATA' || next === state) return next
+  return { ...next, lastUpdated: new Date().toISOString() }
+}
+
+function applyAction(state: FinanceState, action: Action): FinanceState {
   switch (action.type) {
     case 'SET_DATA':
-      return { ...state, ...action.payload, loaded: true }
+      return {
+        ...state,
+        ...action.payload,
+        lastUpdated: action.payload.lastUpdated || state.lastUpdated,
+        loaded: true,
+      }
     case 'ADD_ACCOUNT':
       return { ...state, accounts: [...state.accounts, action.payload] }
     case 'UPDATE_ACCOUNT':
@@ -72,14 +90,19 @@ const FinanceContext = createContext<{
   setDemoMode: (v: boolean) => void
 } | null>(null)
 
-const STORAGE_KEY = 'finance-flash-data'
+const STORAGE_KEY = 'finance-flash-data-v2'
+const LEGACY_STORAGE_KEY = 'finance-flash-data'
+
+// Don't re-pull on every quick tab switch, but do pull when the app has been in
+// the background long enough for another device to have changed something.
+const REFRESH_ON_FOCUS_MS = 30_000
 
 function getFinanceData(state: FinanceState): FinanceData {
   return {
     accounts: state.accounts,
     transactions: state.transactions,
     recurringTransactions: state.recurringTransactions,
-    lastUpdated: new Date().toISOString(),
+    lastUpdated: state.lastUpdated,
   }
 }
 
@@ -97,6 +120,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     accounts: [],
     transactions: [],
     recurringTransactions: [],
+    lastUpdated: '',
     loaded: false,
   })
   const [saving, setSaving] = useState(false)
@@ -113,6 +137,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // consulted, so its state is not yet authoritative. No remote write may
   // happen until loadFromSource has reconciled everything.
   const syncReadyRef = useRef(false)
+  const lastLoadAtRef = useRef(0)
+  // Held in a ref so the visibility listener can call the latest version
+  // without re-subscribing on every render.
+  const loadFromSourceRef = useRef<(() => Promise<void>) | null>(null)
 
   // Mirror state into refs after commit, so the unload handler and the batch
   // interval can read the latest values without re-subscribing.
@@ -227,6 +255,13 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         handleSave()
+        return
+      }
+      // Coming back into view: pull before anything here can push. A tab left
+      // open for hours otherwise holds a snapshot from before the phone's edits
+      // and overwrites them on its next save.
+      if (Date.now() - lastLoadAtRef.current > REFRESH_ON_FOCUS_MS) {
+        loadFromSourceRef.current?.()
       }
     }
 
@@ -257,6 +292,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       const local = localStorage.getItem(STORAGE_KEY)
       if (local) {
         localData = JSON.parse(local)
+      } else {
+        // Caches written before lastUpdated became an edit timestamp carry a
+        // serialisation time instead, which can look newer than remote data
+        // that is genuinely more recent. Keep the records, discard the claim.
+        const legacy = localStorage.getItem(LEGACY_STORAGE_KEY)
+        if (legacy) {
+          localData = { ...JSON.parse(legacy), lastUpdated: '' }
+        }
       }
     } catch {
       console.warn('localStorage read failed');
@@ -294,14 +337,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       console.warn('Turso load failed — treating as unavailable, not as empty')
     }
 
-    const candidates = [driveData, tursoData, localData]
-      .filter((d): d is FinanceData => hasData(d))
-      .sort(
-        (a, b) =>
-          (Date.parse(b.lastUpdated ?? '') || 0) - (Date.parse(a.lastUpdated ?? '') || 0)
-      )
+    // Turso is written on every edit; Drive only every five minutes and on
+    // unload. So Drive is structurally behind, and letting a timestamp
+    // comparison hand it the win loses whatever happened in between.
+    const remote: FinanceData | null = hasData(tursoData)
+      ? tursoData
+      : hasData(driveData)
+        ? driveData
+        : null
 
-    const merged: FinanceData = candidates[0] ?? {
+    // The local cache only wins when it genuinely holds newer edits — offline
+    // changes that have not reached either remote yet.
+    const localIsNewer =
+      hasData(localData) &&
+      (!remote ||
+        (Date.parse(localData!.lastUpdated ?? '') || 0) >
+          (Date.parse(remote.lastUpdated ?? '') || 0))
+
+    const merged: FinanceData = (localIsNewer ? localData : remote) ?? {
       accounts: [],
       transactions: [],
       recurringTransactions: [],
@@ -336,6 +389,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     // Reconciliation is done — the state on screen is now authoritative and may
     // be written back.
     syncReadyRef.current = true
+    lastLoadAtRef.current = Date.now()
   }, [])
 
   // Manual save function with feedback
@@ -361,6 +415,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   }, [canPersistRemote])
 
   useEffect(() => {
+    loadFromSourceRef.current = loadFromSource
     loadFromSource()
   }, [loadFromSource])
 
