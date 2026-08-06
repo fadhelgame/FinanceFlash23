@@ -346,9 +346,24 @@ export default function AccountDetailPage() {
             <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: `${color}33` }}>
               <AcctIcon type={account.type} className="w-6 h-6" style={{ color }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="mono-label">{account.type}</p>
-              <p className="text-lg font-semibold mt-0.5">{account.name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-lg font-semibold truncate">{account.name}</p>
+                {account.isSettled && (
+                  <span
+                    className="text-xs mono-label px-2 py-1 rounded-full shrink-0"
+                    style={{ background: 'color-mix(in oklch, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }}
+                  >
+                    <Check className="w-3 h-3 inline-block mr-1" />Paid
+                  </span>
+                )}
+              </div>
+              {account.isSettled && account.settledAt && (
+                <p className="text-xs mt-1" style={{ opacity: 0.7 }}>
+                  Settled {new Date(account.settledAt).toLocaleDateString('id-ID')}
+                </p>
+              )}
             </div>
           </div>
           <p className="text-sm mb-1" style={{ opacity: 0.7 }}>Current Balance</p>

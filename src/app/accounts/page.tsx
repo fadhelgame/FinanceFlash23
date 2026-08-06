@@ -7,7 +7,7 @@ import { useFinanceStore } from '@/lib/store'
 import { formatIDR, getAccountBalance, getActiveAccounts, getSettledAccounts, ACCOUNT_ICONS, ACCOUNT_TYPES, generateId } from '@/lib/types'
 import type { Account, AccountType } from '@/lib/types'
 import { ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
-import { Wallet, Plus, Check, Trash2, CheckSquare, Square, Pencil } from 'lucide-react'
+import { Wallet, Plus, Check, Trash2, CheckSquare, Square, Pencil, ChevronRight } from 'lucide-react'
 import AuthGuard from '@/components/AuthGuard'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -280,11 +280,12 @@ export default function AccountsPage() {
               <div className="grid grid-cols-1 gap-3">
                 {settledAccounts.map(acc => {
                   const color = ACCOUNT_TYPE_COLORS[acc.type]
-                  return (
-                    <div
-                      key={acc.id}
-                      className="card flex items-center gap-4 opacity-60"
-                    >
+                  const isSelected = selectedIds.has(acc.id)
+                  // Settled loans are closed, not archived — their history stays
+                  // readable, so the card opens the same detail page as an
+                  // active account. Dimmed to keep the two states distinct.
+                  const body = (
+                    <>
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
                         style={{ background: `${color}1F` }}
@@ -296,12 +297,39 @@ export default function AccountsPage() {
                         <p className="mono-label text-xs mt-0.5">Settled · {new Date(acc.settledAt!).toLocaleDateString('id-ID')}</p>
                       </div>
                       <span
-                        className="text-xs mono-label px-2 py-1 rounded-full"
+                        className="text-xs mono-label px-2 py-1 rounded-full shrink-0"
                         style={{ background: 'color-mix(in oklch, var(--color-success) 15%, transparent)', color: 'var(--color-success)' }}
                       >
                         <Check className="w-3 h-3 inline-block mr-1" />Paid
                       </span>
-                    </div>
+                    </>
+                  )
+                  return selectMode ? (
+                    <button
+                      key={acc.id}
+                      onClick={() => {
+                        const next = new Set(selectedIds)
+                        if (isSelected) next.delete(acc.id)
+                        else next.add(acc.id)
+                        setSelectedIds(next)
+                      }}
+                      className="card flex items-center gap-4 w-full text-left opacity-70"
+                      style={{ borderColor: isSelected ? 'var(--color-accent)' : undefined, borderWidth: isSelected ? '1.5px' : undefined }}
+                    >
+                      <div style={{ color: isSelected ? 'var(--color-accent)' : 'var(--color-ink-3)' }}>
+                        {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                      </div>
+                      {body}
+                    </button>
+                  ) : (
+                    <Link
+                      key={acc.id}
+                      href={`/accounts/${acc.id}`}
+                      className="card flex items-center gap-4 opacity-70 hover:opacity-100 hover:scale-[1.01] transition-all"
+                    >
+                      {body}
+                      <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--color-ink-3)' }} />
+                    </Link>
                   )
                 })}
               </div>
