@@ -7,7 +7,6 @@ import { useAuth } from '@/lib/auth-context'
 import { formatIDR, getTotalBalance, getTotalIncome, getTotalExpense, getAccountBalance, getActiveAccounts, getSettledAccounts, getAccountLabel, CATEGORIES, generateId } from '@/lib/types'
 import type { Account, Transaction, RecurringTransaction, TransactionCategory, AccountType } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
-import { printDocument, escapeHTML } from '@/lib/print'
 import {
   Plus,
   TrendingUp,
@@ -35,25 +34,41 @@ function exportCSV(transactions: Transaction[]) {
   URL.revokeObjectURL(url)
 }
 
-function exportPDF(transactions: Transaction[]) {
-  // Simple printable view
-  printDocument(`
-    <html><head><meta charset="utf-8"><title>Finance Flash Export</title>
-    <style>
-      body { font-family: Inter, sans-serif; background:#fff; color:#111; padding:40px; }
-      h1 { font-size:24px; margin-bottom:8px; }
-      .meta { color:#666; margin-bottom:24px; }
-      table { width:100%; border-collapse:collapse; }
-      th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #eee; font-size:14px; }
-      th { background:#f5f5f5; font-weight:600; }
-      .income { color:#16a34a; } .expense { color:#dc2626; }
-    </style></head><body>
-    <h1>Finance Flash</h1>
-    <p class="meta">Exported ${new Date().toLocaleDateString()} — ${transactions.length} transactions</p>
-    <table><thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Type</th><th>Amount</th></tr></thead><tbody>
-    ${transactions.map(t => `<tr><td>${escapeHTML(t.title)}</td><td>${escapeHTML(t.category)}</td><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.isIncome ? 'Income' : 'Expense'}</td><td class="${t.isIncome ? 'income' : 'expense'}">${formatIDR(t.amount)}</td></tr>`).join('')}
-    </tbody></table></body></html>
-  `)
+async function exportPDF(transactions: Transaction[]) {
+  const [{ jsPDF }, { buildPDF, deliverPDF }] = await Promise.all([
+    import('jspdf'),
+    import('@/lib/pdf'),
+  ])
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+
+  const income = getTotalIncome(transactions)
+  const expense = getTotalExpense(transactions)
+
+  buildPDF(doc, {
+    title: 'Finance Flash',
+    subtitle: `Exported ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+    summary: [
+      { label: 'Transactions', value: String(transactions.length) },
+      { label: 'Income', value: formatIDR(income), color: [22, 163, 74] },
+      { label: 'Expense', value: formatIDR(expense), color: [220, 38, 38] },
+    ],
+    columns: [
+      { header: 'Date', width: 0.16 },
+      { header: 'Title', width: 0.4 },
+      { header: 'Category', width: 0.19 },
+      { header: 'Amount', width: 0.25, align: 'right' },
+    ],
+    rows: transactions.map(t => [
+      new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+      t.title,
+      t.category,
+      `${t.isIncome ? '+' : '-'}${formatIDR(t.amount)}`,
+    ]),
+    rowAccent: i => (transactions[i].isIncome ? [22, 163, 74] : [220, 38, 38]),
+    footer: `${transactions.length} transactions`,
+  })
+
+  await deliverPDF(doc.output('blob'), 'finance-flash.pdf')
 }
 
 function exportJSON(state: { accounts: Account[]; transactions: Transaction[]; recurringTransactions: RecurringTransaction[] }) {

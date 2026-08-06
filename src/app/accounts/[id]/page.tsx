@@ -9,7 +9,6 @@ import { formatIDR, getAccountBalance, getTotalIncome, getTotalExpense, ACCOUNT_
 import type { Account, Transaction, TransactionCategory } from '@/lib/types'
 import { useParams } from 'next/navigation'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
-import { printDocument, escapeHTML } from '@/lib/print'
 import { TrendingUp, TrendingDown, Trash2, ArrowLeft, Download, Check } from 'lucide-react'
 
 /* ---------- Edit Transaction Modal ---------- */
@@ -195,36 +194,39 @@ function exportCSV(accountName: string, transactions: Transaction[]) {
   URL.revokeObjectURL(url)
 }
 
-function exportPDF(accountName: string, transactions: Transaction[], balance: number, income: number, expense: number) {
-  printDocument(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(accountName)} — Finance Flash</title>
-<style>
-  body { font-family: Geist, system-ui, sans-serif; padding: 48px; color: #1a1a2e; }
-  h1 { font-size: 28px; margin: 0 0 4px; }
-  .sub { color: #666; font-size: 11px; margin-bottom: 24px; }
-  .summary { display: flex; gap: 16px; margin-bottom: 32px; }
-  .summary-card { padding: 16px; border-radius: 12px; flex: 1; }
-  .summary-card .label { font-size: 9px; text-transform: uppercase; color: #666; margin: 0 0 4px; }
-  .summary-card .value { font-size: 15px; font-weight: bold; margin: 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th { background: #1a1a2e; color: white; padding: 8px 14px; text-align: left; font-size: 9px; text-transform: uppercase; }
-  td { padding: 8px 14px; border-bottom: 1px solid #eee; }
-  tr:nth-child(even) td { background: #fafafa; }
-  .green { color: #22c55e; }
-  .red { color: #ef4444; }
-  .footer { margin-top: 24px; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 16px; }
-</style></head><body>
-<h1>${escapeHTML(accountName)}</h1>
-<p class="sub">Finance Flash · Generated ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-<div class="summary">
-  <div class="summary-card" style="background:#eef2ff;"><p class="label">Balance</p><p class="value">${formatRupiah(balance)}</p></div>
-  <div class="summary-card" style="background:#f0fdf4;"><p class="label">Income</p><p class="value green">${formatRupiah(income)}</p></div>
-  <div class="summary-card" style="background:#fef2f2;"><p class="label">Expense</p><p class="value red">${formatRupiah(expense)}</p></div>
-</div>
-<table><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th></tr>
-${transactions.map(t => `<tr><td>${new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td><td>${escapeHTML(t.title)}</td><td>${escapeHTML(t.category)}</td><td class="${t.isIncome ? 'green' : 'red'}">${t.isIncome ? '+' : '-'}${formatRupiah(t.amount)}</td></tr>`).join('')}
-</table>
-<p class="footer">${transactions.length} transactions · Balance: ${formatRupiah(balance)}</p>
-</body></html>`)
+async function exportPDF(accountName: string, transactions: Transaction[], balance: number, income: number, expense: number) {
+  const [{ jsPDF }, { buildPDF, deliverPDF }] = await Promise.all([
+    import('jspdf'),
+    import('@/lib/pdf'),
+  ])
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+
+  buildPDF(doc, {
+    title: accountName,
+    subtitle: `Finance Flash - Generated ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+    summary: [
+      { label: 'Balance', value: formatRupiah(balance) },
+      { label: 'Income', value: formatRupiah(income), color: [34, 197, 94] },
+      { label: 'Expense', value: formatRupiah(expense), color: [239, 68, 68] },
+    ],
+    columns: [
+      { header: 'Date', width: 0.16 },
+      { header: 'Title', width: 0.4 },
+      { header: 'Category', width: 0.19 },
+      { header: 'Amount', width: 0.25, align: 'right' },
+    ],
+    rows: transactions.map(t => [
+      new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+      t.title,
+      t.category,
+      `${t.isIncome ? '+' : '-'}${formatRupiah(t.amount)}`,
+    ]),
+    rowAccent: i => (transactions[i].isIncome ? [34, 197, 94] : [239, 68, 68]),
+    footer: `${transactions.length} transactions - Balance: ${formatRupiah(balance)}`,
+  })
+
+  const safeName = accountName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
+  await deliverPDF(doc.output('blob'), `${safeName}-transactions.pdf`)
 }
 
 export default function AccountDetailPage() {
