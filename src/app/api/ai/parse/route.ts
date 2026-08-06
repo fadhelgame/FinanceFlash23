@@ -79,17 +79,17 @@ function coerceTransaction(
 }
 
 export async function POST(request: NextRequest) {
+  const cookieStore = await cookies()
+  if (!cookieStore.get('google_email')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) {
     return NextResponse.json(
       { error: 'DEEPSEEK_API_KEY is not configured on the server.' },
       { status: 501 }
     )
-  }
-
-  const cookieStore = await cookies()
-  if (!cookieStore.get('google_email')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   let text: string
