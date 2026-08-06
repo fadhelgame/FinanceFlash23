@@ -86,6 +86,18 @@ export interface FinanceData {
   lastUpdated: string;
 }
 
+// Total number of stored records. Used by the write guards to detect a payload
+// that would destroy data, so it must tolerate arbitrary/unparsed input.
+export function countEntries(data: unknown): number {
+  if (!data || typeof data !== "object") return 0;
+  const d = data as Partial<FinanceData>;
+  return (
+    (Array.isArray(d.accounts) ? d.accounts.length : 0) +
+    (Array.isArray(d.transactions) ? d.transactions.length : 0) +
+    (Array.isArray(d.recurringTransactions) ? d.recurringTransactions.length : 0)
+  );
+}
+
 export function getAccountBalance(
   account: Account,
   transactions: Transaction[]

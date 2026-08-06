@@ -46,11 +46,13 @@ export async function logout(): Promise<void> {
   await apiCall("/api/auth/logout", { method: "POST" });
 }
 
-// Save data to Google Drive
-export async function saveToDrive(data: unknown): Promise<void> {
+// Save data to Google Drive. `allowEmpty` tells the server the caller has an
+// authoritative snapshot, so an empty payload is a real deletion rather than a
+// failed load — without it the server refuses to blank a populated file.
+export async function saveToDrive(data: unknown, allowEmpty = false): Promise<void> {
   return apiCall("/api/google-drive/save", {
     method: "POST",
-    body: JSON.stringify({ data }),
+    body: JSON.stringify({ data, allowEmpty }),
   });
 }
 

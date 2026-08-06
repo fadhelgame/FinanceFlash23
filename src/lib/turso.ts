@@ -1,25 +1,10 @@
 import { createClient } from '@libsql/client'
+import { countEntries } from './types'
 
 const client = createClient({
   url: process.env.TURSO_DATABASE_URL || '',
   authToken: process.env.TURSO_AUTH_TOKEN || '',
 })
-
-interface FinanceShape {
-  accounts?: unknown[]
-  transactions?: unknown[]
-  recurringTransactions?: unknown[]
-}
-
-function countEntries(data: unknown): number {
-  const d = data as FinanceShape
-  if (!d || typeof d !== 'object') return 0
-  return (
-    (Array.isArray(d.accounts) ? d.accounts.length : 0) +
-    (Array.isArray(d.transactions) ? d.transactions.length : 0) +
-    (Array.isArray(d.recurringTransactions) ? d.recurringTransactions.length : 0)
-  )
-}
 
 let historyTableReady: Promise<void> | null = null
 

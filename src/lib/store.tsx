@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { Account, Transaction, RecurringTransaction, FinanceData } from './types'
-import { processRecurring, generateId } from './types'
+import { processRecurring } from './types'
 
 interface FinanceState {
   accounts: Account[]
@@ -103,15 +103,22 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [isDemoMode, setDemoMode] = useState(false)
   const stateRef = useRef(state)
-  const savingRef = useRef(false)
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const demoModeRef = useRef(false)
   // True when a remote source failed to answer during load. While degraded we
   // hold no authoritative snapshot, so an empty state is meaningless and must
   // never be written back over the real data.
   const loadDegradedRef = useRef(true)
-  stateRef.current = state
-  demoModeRef.current = isDemoMode
+
+  // Mirror state into refs after commit, so the unload handler and the batch
+  // interval can read the latest values without re-subscribing.
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
+  useEffect(() => {
+    demoModeRef.current = isDemoMode
+  }, [isDemoMode])
 
   // An empty payload is only safe to persist when we know the emptiness is real
   // — i.e. the load phase completed against every source without errors.
@@ -146,7 +153,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         fetch('/api/turso/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: decodeURIComponent(email), data }),
+          body: JSON.stringify({
+            email: decodeURIComponent(email),
+            data,
+            // Only vouch for an empty payload when the load phase was clean.
+            allowEmpty: !loadDegradedRef.current,
+          }),
         }).catch(() => {})
       }
       setLastSaved(new Date().toLocaleTimeString('id-ID'))
@@ -166,7 +178,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         const { saveToDrive: apiSave } = await import('./google-drive')
         const data = getFinanceData(stateRef.current)
         // Only sync if we have data
-        if (data.accounts.length > 0 || data.transactions.length > 0 || data.recurringTransactions.length > 0) {
+        if (hasData(data)) {
           setSaving(true)
           await apiSave(data)
           setSaving(false)
@@ -177,7 +189,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }, 5 * 60 * 1000) // 5 minutes
 
     return () => clearInterval(interval)
-  }, [state.loaded])
+  }, [state.loaded, isDemoMode])
 
   // Save on tab close / hide
   useEffect(() => {
@@ -191,7 +203,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       // for a normal fetch, so hand it to the browser to deliver.
       const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
       if (email) {
-        const body = JSON.stringify({ email: decodeURIComponent(email), data })
+        const body = JSON.stringify({
+          email: decodeURIComponent(email),
+          data,
+          allowEmpty: !loadDegradedRef.current,
+        })
         navigator.sendBeacon(
           '/api/turso/save',
           new Blob([body], { type: 'application/json' })
@@ -199,7 +215,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }
 
       import('./google-drive').then(m =>
-        m.saveToDrive(data).catch(() => {})
+        m.saveToDrive(data, !loadDegradedRef.current).catch(() => {})
       )
     }
 
@@ -310,8 +326,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setSaving(true)
       const data = getFinanceData(stateRef.current)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      if (!canPersistRemote(data)) {
+        setSaving(false)
+        return false
+      }
       const { saveToDrive: apiSave } = await import('./google-drive')
-      await apiSave(data)
+      await apiSave(data, !loadDegradedRef.current)
       setLastSaved(new Date().toLocaleTimeString('id-ID'))
       setSaving(false)
       return true
@@ -319,7 +339,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setSaving(false)
       return false
     }
-  }, [])
+  }, [canPersistRemote])
 
   useEffect(() => {
     loadFromSource()
