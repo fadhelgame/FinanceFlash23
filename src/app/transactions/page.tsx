@@ -8,8 +8,9 @@ import { useFinanceStore } from '@/lib/store'
 import { formatIDR, CATEGORIES, generateId, getActiveAccounts, getAccountLabel } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon } from '@/lib/ui-utils'
+import ImportNotesModal from '@/components/ImportNotesModal'
 import {
-  Plus, Trash2, Search, ArrowLeft, CheckSquare, Square,
+  Plus, Trash2, Search, ArrowLeft, CheckSquare, Square, Sparkles,
 } from 'lucide-react'
 
 type DateFilter = 'all' | 'this-month' | 'last-month' | 'custom'
@@ -153,6 +154,7 @@ export default function TransactionsPage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set())
   const [assignAccountId, setAssignAccountId] = useState('')
@@ -252,12 +254,21 @@ export default function TransactionsPage() {
               Cancel
             </button>
           ) : (
-            <button
-              onClick={() => setSelectMode(true)}
-              className="btn btn-ghost text-sm px-3 py-1.5"
-            >
-              Manage
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="btn btn-ghost text-sm px-3 py-1.5"
+                title="Import transactions from written notes"
+              >
+                <Sparkles className="w-4 h-4" /> Import
+              </button>
+              <button
+                onClick={() => setSelectMode(true)}
+                className="btn btn-ghost text-sm px-3 py-1.5"
+              >
+                Manage
+              </button>
+            </div>
           )}
         </div>
 
@@ -486,6 +497,8 @@ export default function TransactionsPage() {
       </button>
 
       {/* Add Modal */}
+      <ImportNotesModal open={showImportModal} onClose={() => setShowImportModal(false)} />
+
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
