@@ -109,6 +109,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // hold no authoritative snapshot, so an empty state is meaningless and must
   // never be written back over the real data.
   const loadDegradedRef = useRef(true)
+  // The optimistic cache render happens before the remote sources have been
+  // consulted, so its state is not yet authoritative. No remote write may
+  // happen until loadFromSource has reconciled everything.
+  const syncReadyRef = useRef(false)
 
   // Mirror state into refs after commit, so the unload handler and the batch
   // interval can read the latest values without re-subscribing.
@@ -123,6 +127,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // An empty payload is only safe to persist when we know the emptiness is real
   // — i.e. the load phase completed against every source without errors.
   const canPersistRemote = useCallback((data: FinanceData): boolean => {
+    if (!syncReadyRef.current) return false
     if (hasData(data)) return true
     if (loadDegradedRef.current) {
       console.warn('Skipping remote save of empty state — load was degraded')
@@ -245,31 +250,9 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
     const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
 
-    // Try Drive
-    try {
-      const { loadFromDrive } = await import('./google-drive')
-      driveData = await loadFromDrive<FinanceData>()
-    } catch {
-      degraded = true
-      console.warn('Drive load failed — treating as unavailable, not as empty')
-    }
-
-    // Try Turso
-    if (email) {
-      try {
-        const res = await fetch(
-          `/api/turso/load?email=${encodeURIComponent(decodeURIComponent(email))}`
-        )
-        if (!res.ok) throw new Error(`turso load ${res.status}`)
-        const json = await res.json()
-        tursoData = Array.isArray(json?.accounts) ? (json as FinanceData) : null
-      } catch {
-        degraded = true
-        console.warn('Turso load failed — treating as unavailable, not as empty')
-      }
-    }
-
-    // Try localStorage
+    // localStorage is instant and already on the device, so read it first and
+    // paint with it. Waiting on two network round-trips before showing anything
+    // is the difference between an app that opens and one that hangs.
     try {
       const local = localStorage.getItem(STORAGE_KEY)
       if (local) {
@@ -277,6 +260,38 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       console.warn('localStorage read failed');
+    }
+    if (hasData(localData)) {
+      dispatch({ type: 'SET_DATA', payload: localData! })
+    }
+
+    // Drive and Turso are independent — asking them one after the other doubled
+    // the wait for no reason.
+    const [driveResult, tursoResult] = await Promise.allSettled([
+      import('./google-drive').then(m => m.loadFromDrive<FinanceData>()),
+      email
+        ? fetch(`/api/turso/load?email=${encodeURIComponent(decodeURIComponent(email))}`).then(
+            async res => {
+              if (!res.ok) throw new Error(`turso load ${res.status}`)
+              const json = await res.json()
+              return Array.isArray(json?.accounts) ? (json as FinanceData) : null
+            }
+          )
+        : Promise.resolve(null),
+    ])
+
+    if (driveResult.status === 'fulfilled') {
+      driveData = driveResult.value
+    } else {
+      degraded = true
+      console.warn('Drive load failed — treating as unavailable, not as empty')
+    }
+
+    if (tursoResult.status === 'fulfilled') {
+      tursoData = tursoResult.value
+    } else {
+      degraded = true
+      console.warn('Turso load failed — treating as unavailable, not as empty')
     }
 
     const candidates = [driveData, tursoData, localData]
@@ -317,6 +332,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     } else {
       dispatch({ type: 'SET_DATA', payload: { accounts: [], transactions: [], recurringTransactions: [], lastUpdated: new Date().toISOString() } })
     }
+
+    // Reconciliation is done — the state on screen is now authoritative and may
+    // be written back.
+    syncReadyRef.current = true
   }, [])
 
   // Manual save function with feedback

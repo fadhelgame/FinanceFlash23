@@ -199,7 +199,9 @@ export default function DashboardView({
   const jsonInputRef = useRef<HTMLInputElement>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
 
-  const accounts = getActiveAccounts(state.accounts)
+  // Memoised: a fresh array on every render gave every downstream useMemo a new
+  // dependency identity, so none of them ever hit cache.
+  const accounts = useMemo(() => getActiveAccounts(state.accounts), [state.accounts])
   const transactions = state.transactions
   const recurring = state.recurringTransactions
   const { login } = useAuth()
@@ -207,11 +209,13 @@ export default function DashboardView({
   const totalBalance = useMemo(() => getTotalBalance(accounts, transactions), [accounts, transactions])
   const totalIncome = useMemo(() => getTotalIncome(transactions), [transactions])
   const totalExpense = useMemo(() => getTotalExpense(transactions), [transactions])
-  const sortedTx = useMemo(
-    () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+  // Only the ten newest are shown, so a full sort is wasted work. Dates are
+  // ISO-ish, which compares correctly as a string — no Date allocation per
+  // comparison.
+  const latestTx = useMemo(
+    () => [...transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 10),
     [transactions]
   )
-  const latestTx = sortedTx.slice(0, 10)
 
   const recurringIncome = useMemo(
     () => recurring.filter(r => r.isActive && r.isIncome).reduce((s, r) => s + r.amount, 0),

@@ -5,6 +5,8 @@ import { useFinanceStore } from '@/lib/store'
 import { CATEGORIES, generateId } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
+import NotesImportPanel from './NotesImportPanel'
+import { Sparkles, PenLine } from 'lucide-react'
 
 interface TxForm {
   isIncome: boolean
@@ -28,15 +30,19 @@ export default function AddTransactionModal({
   open,
   onClose,
   onSave,
+  onSaveMany,
   initial,
 }: {
   open: boolean
   onClose: () => void
   onSave: (t: Transaction) => void
+  /** When provided, the modal offers reading a written note into transactions. */
+  onSaveMany?: (transactions: Transaction[]) => void
   initial?: Transaction | null
 }) {
   const { state } = useFinanceStore()
   const [form, setForm] = useState<TxForm>(emptyTxForm())
+  const [mode, setMode] = useState<'manual' | 'notes'>('manual')
 
   // Sync form when initial changes (editing different transactions)
   useEffect(() => {
@@ -82,13 +88,53 @@ export default function AddTransactionModal({
 
   const handleClose = () => {
     setForm(emptyTxForm())
+    setMode('manual')
     onClose()
   }
+
+  // Reading notes only makes sense when creating; editing targets one existing
+  // transaction.
+  const notesAvailable = !!onSaveMany && !initial
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative w-full max-w-md card rounded-t-3xl sm:rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up" style={{ background: 'var(--color-paper-0)' }}>
+        {/* Input method — reading a note is a way of adding a transaction, so it
+            belongs here rather than behind a separate menu. */}
+        {notesAvailable && (
+          <div className="flex rounded-xl p-1 mb-4" style={{ background: 'var(--color-paper-2)' }}>
+            <button
+              onClick={() => setMode('manual')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                mode === 'manual' ? 'btn-primary text-sm py-2' : ''
+              }`}
+              style={mode === 'manual' ? {} : { color: 'var(--color-ink-2)' }}
+            >
+              <PenLine className="w-3.5 h-3.5" /> Manual
+            </button>
+            <button
+              onClick={() => setMode('notes')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                mode === 'notes' ? 'btn-primary text-sm py-2' : ''
+              }`}
+              style={mode === 'notes' ? {} : { color: 'var(--color-ink-2)' }}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> From notes
+            </button>
+          </div>
+        )}
+
+        {mode === 'notes' && notesAvailable ? (
+          <NotesImportPanel
+            onAdd={transactions => {
+              onSaveMany!(transactions)
+              handleClose()
+            }}
+            onCancel={handleClose}
+          />
+        ) : (
+        <>
         {/* Type toggle */}
         <div className="flex rounded-xl p-1 mb-6" style={{ background: 'var(--color-paper-2)' }}>
           {(['Expense', 'Income'] as const).map((label) => (
@@ -226,6 +272,8 @@ export default function AddTransactionModal({
             {initial ? 'Update' : 'Save'}
           </button>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

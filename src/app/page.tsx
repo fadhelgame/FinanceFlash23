@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useFinanceStore } from '@/lib/store'
 import dynamic from 'next/dynamic'
 import AddTransactionModal from '@/components/AddTransactionModal'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Transaction } from '@/lib/types'
 import { Plus } from 'lucide-react'
 import { demoData } from '@/lib/demo-data'
@@ -18,6 +18,18 @@ export default function DashboardPage() {
   const [showTxModal, setShowTxModal] = useState(false)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const demoInjectedRef = useRef(false)
+
+  // Both views are lazy, so nothing starts downloading until the auth probe
+  // resolves — two waits in series. Guess from the email cookie which one this
+  // visitor will land on and fetch it in parallel with the probe.
+  useEffect(() => {
+    const signedInBefore = document.cookie.includes('google_email=')
+    if (signedInBefore) {
+      import('@/components/DashboardView')
+    } else {
+      import('@/components/LandingPage')
+    }
+  }, [])
 
   const handleDemo = () => {
     if (!demoInjectedRef.current) {
@@ -69,6 +81,10 @@ export default function DashboardPage() {
           open={showTxModal}
           onClose={() => { setShowTxModal(false); setEditingTx(null) }}
           onSave={handleSaveTx}
+          onSaveMany={(transactions) => {
+            dispatch({ type: 'ADD_MULTIPLE_TRANSACTIONS', payload: transactions })
+            setShowTxModal(false)
+          }}
           initial={editingTx}
         />
       </>

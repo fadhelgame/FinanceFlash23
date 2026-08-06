@@ -1,16 +1,15 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import Link from 'next/link'
 import AuthGuard from '@/components/AuthGuard'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
-import { formatIDR, CATEGORIES, generateId, getActiveAccounts, getAccountLabel } from '@/lib/types'
+import { formatIDR, CATEGORIES, getActiveAccounts, getAccountLabel } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon } from '@/lib/ui-utils'
-import ImportNotesModal from '@/components/ImportNotesModal'
+import AddTransactionModal from '@/components/AddTransactionModal'
 import {
-  Plus, Trash2, Search, ArrowLeft, CheckSquare, Square, Sparkles,
+  Plus, Trash2, Search, CheckSquare, Square,
 } from 'lucide-react'
 
 type DateFilter = 'all' | 'this-month' | 'last-month' | 'custom'
@@ -154,16 +153,17 @@ export default function TransactionsPage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showImportModal, setShowImportModal] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set())
   const [assignAccountId, setAssignAccountId] = useState('')
 
-  const accounts = getActiveAccounts(state.accounts)
+  const accounts = useMemo(() => getActiveAccounts(state.accounts), [state.accounts])
 
   const filtered = useMemo(() => {
     let list = [...state.transactions]
-    list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    // ISO-ish dates compare correctly as strings, so this avoids allocating two
+    // Date objects for every comparison in the sort.
+    list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(t => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q))
@@ -199,32 +199,6 @@ export default function TransactionsPage() {
     return list
   }, [state.transactions, search, filterCat, dateFilter, customStart, customEnd])
 
-  /* ---------- Add Tx Modal (inline, simplified) ---------- */
-  const [addForm, setAddForm] = useState({
-    isIncome: false, amount: '', title: '', category: 'Other' as TransactionCategory,
-    accountId: null as string | null, date: new Date().toISOString().slice(0, 10),
-  })
-
-  const handleAddTx = () => {
-    const amount = parseInt(addForm.amount.replace(/\D/g, ''), 10) || 0
-    if (!addForm.title || amount <= 0) return
-    dispatch({
-      type: 'ADD_TRANSACTION',
-      payload: {
-        id: generateId(),
-        title: addForm.title,
-        amount,
-        category: addForm.category,
-        date: addForm.date,
-        isIncome: addForm.isIncome,
-        accountId: addForm.accountId,
-        createdAt: new Date().toISOString(),
-      },
-    })
-    setAddForm({ isIncome: false, amount: '', title: '', category: 'Other', accountId: null, date: new Date().toISOString().slice(0, 10) })
-    setShowAddModal(false)
-  }
-
   const handleSaveTx = (tx: Transaction) => {
     dispatch({ type: 'UPDATE_TRANSACTION', payload: tx })
   }
@@ -254,21 +228,12 @@ export default function TransactionsPage() {
               Cancel
             </button>
           ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="btn btn-ghost text-sm px-3 py-1.5"
-                title="Import transactions from written notes"
-              >
-                <Sparkles className="w-4 h-4" /> Import
-              </button>
-              <button
-                onClick={() => setSelectMode(true)}
-                className="btn btn-ghost text-sm px-3 py-1.5"
-              >
-                Manage
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectMode(true)}
+              className="btn btn-ghost text-sm px-3 py-1.5"
+            >
+              Manage
+            </button>
           )}
         </div>
 
@@ -496,96 +461,20 @@ export default function TransactionsPage() {
         <Plus className="w-6 h-6" />
       </button>
 
-      {/* Add Modal */}
-      <ImportNotesModal open={showImportModal} onClose={() => setShowImportModal(false)} />
-
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="relative w-full max-w-md card rounded-t-3xl sm:rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up" style={{ background: 'var(--color-paper-0)' }}>
-            <h2 className="text-lg font-semibold mb-6" style={{ color: 'var(--color-ink-0)' }}>Add Transaction</h2>
-
-            <div className="flex rounded-xl p-1 mb-6" style={{ background: 'var(--color-paper-2)' }}>
-              {(['Expense', 'Income'] as const).map(label => (
-                <button key={label} onClick={() => setAddForm(f => ({ ...f, isIncome: label === 'Income' }))}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${(label === 'Expense' ? !addForm.isIncome : addForm.isIncome) ? 'btn-primary text-sm py-2' : ''}`}
-                  style={(label === 'Expense' ? !addForm.isIncome : addForm.isIncome) ? {} : { color: 'var(--color-ink-2)' }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-4">
-              <div className="flex items-center gap-2 rounded-xl px-4 py-3" style={{ background: 'var(--color-paper-2)' }}>
-                <span className="text-xl font-bold" style={{ color: 'var(--color-ink-2)' }}>Rp</span>
-                <input type="text" inputMode="numeric" placeholder="0" value={addForm.amount}
-                  onChange={e => setAddForm(f => ({ ...f, amount: e.target.value.replace(/[^0-9]/g, '') }))}
-                  className="flex-1 bg-transparent text-xl font-bold outline-none" style={{ color: 'var(--color-ink-0)' }} />
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <input type="text" placeholder="Title" value={addForm.title}
-                onChange={e => setAddForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full rounded-xl px-4 py-3 outline-none" style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }} />
-            </div>
-
-            <div className="mb-4">
-              <label className="mono-label mb-2 block">Category</label>
-              <div className="grid grid-cols-4 gap-2">
-                {CATEGORIES.map(cat => {
-                  const color = CATEGORY_COLORS[cat]
-                  const selected = addForm.category === cat
-                  return (
-                    <button key={cat} onClick={() => setAddForm(f => ({ ...f, category: cat }))}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${selected ? 'ring-1' : ''}`}
-                      style={{ background: selected ? 'var(--color-paper-2)' : 'var(--color-paper-1)' }}>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: selected ? color : `${color}33` }}>
-                        <CatIcon category={cat} className="w-4 h-4" style={{ color: selected ? '#fff' : color }} />
-                      </div>
-                      <span className="text-[10px]" style={{ color: selected ? 'var(--color-ink-0)' : 'var(--color-ink-2)' }}>{cat}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="mono-label mb-2 block">Account</label>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                <button onClick={() => setAddForm(f => ({ ...f, accountId: null }))}
-                  className={`shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all ${addForm.accountId === null ? 'btn-primary text-xs py-2' : ''}`}
-                  style={addForm.accountId === null ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}>
-                  None
-                </button>
-                {state.accounts
-                  .filter(acc => !acc.isSettled || acc.id === addForm.accountId)
-                  .map(acc => (
-                  <button key={acc.id} onClick={() => setAddForm(f => ({ ...f, accountId: acc.id }))}
-                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all ${addForm.accountId === acc.id ? 'btn-primary text-xs py-2' : ''}`}
-                    style={addForm.accountId === acc.id ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}>
-                    {acc.isSettled ? `${acc.name} - Lunas` : acc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="mono-label mb-2 block">Date</label>
-              <input type="date" value={addForm.date}
-                onChange={e => setAddForm(f => ({ ...f, date: e.target.value }))}
-                className="w-full rounded-xl px-4 py-3 outline-none" style={{ background: 'var(--color-paper-2)', color: 'var(--color-ink-0)' }} />
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setShowAddModal(false)}
-                className="btn-ghost flex-1 py-3">Cancel</button>
-              <button onClick={handleAddTx}
-                className="btn-primary flex-1 py-3">Save</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Modal — shared with the dashboard, so both "+" buttons offer the
+          same manual form and the same read-from-notes flow. */}
+      <AddTransactionModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={(tx) => {
+          dispatch({ type: 'ADD_TRANSACTION', payload: tx })
+          setShowAddModal(false)
+        }}
+        onSaveMany={(transactions) => {
+          dispatch({ type: 'ADD_MULTIPLE_TRANSACTIONS', payload: transactions })
+          setShowAddModal(false)
+        }}
+      />
 
       {/* Edit Modal */}
       <EditTxModal
