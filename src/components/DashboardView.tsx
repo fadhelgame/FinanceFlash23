@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { formatIDR, getTotalBalance, getTotalIncome, getTotalExpense, getAccountBalance, getActiveAccounts, getSettledAccounts, getAccountLabel, CATEGORIES, generateId } from '@/lib/types'
 import type { Account, Transaction, RecurringTransaction, TransactionCategory, AccountType } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
+import { printDocument, escapeHTML } from '@/lib/print'
 import {
   Plus,
   TrendingUp,
@@ -36,10 +37,8 @@ function exportCSV(transactions: Transaction[]) {
 
 function exportPDF(transactions: Transaction[]) {
   // Simple printable view
-  const win = window.open('', '_blank')
-  if (!win) return
-  win.document.write(`
-    <html><head><title>Finance Flash Export</title>
+  printDocument(`
+    <html><head><meta charset="utf-8"><title>Finance Flash Export</title>
     <style>
       body { font-family: Inter, sans-serif; background:#fff; color:#111; padding:40px; }
       h1 { font-size:24px; margin-bottom:8px; }
@@ -52,11 +51,9 @@ function exportPDF(transactions: Transaction[]) {
     <h1>Finance Flash</h1>
     <p class="meta">Exported ${new Date().toLocaleDateString()} — ${transactions.length} transactions</p>
     <table><thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Type</th><th>Amount</th></tr></thead><tbody>
-    ${transactions.map(t => `<tr><td>${t.title}</td><td>${t.category}</td><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.isIncome ? 'Income' : 'Expense'}</td><td class="${t.isIncome ? 'income' : 'expense'}">${formatIDR(t.amount)}</td></tr>`).join('')}
+    ${transactions.map(t => `<tr><td>${escapeHTML(t.title)}</td><td>${escapeHTML(t.category)}</td><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.isIncome ? 'Income' : 'Expense'}</td><td class="${t.isIncome ? 'income' : 'expense'}">${formatIDR(t.amount)}</td></tr>`).join('')}
     </tbody></table></body></html>
   `)
-  win.document.close()
-  win.print()
 }
 
 function exportJSON(state: { accounts: Account[]; transactions: Transaction[]; recurringTransactions: RecurringTransaction[] }) {

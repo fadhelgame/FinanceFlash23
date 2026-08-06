@@ -9,6 +9,7 @@ import { formatIDR, getAccountBalance, getTotalIncome, getTotalExpense, ACCOUNT_
 import type { Account, Transaction, TransactionCategory } from '@/lib/types'
 import { useParams } from 'next/navigation'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
+import { printDocument, escapeHTML } from '@/lib/print'
 import { TrendingUp, TrendingDown, Trash2, ArrowLeft, Download, Check } from 'lucide-react'
 
 /* ---------- Edit Transaction Modal ---------- */
@@ -195,9 +196,7 @@ function exportCSV(accountName: string, transactions: Transaction[]) {
 }
 
 function exportPDF(accountName: string, transactions: Transaction[], balance: number, income: number, expense: number) {
-  const win = window.open('', '_blank')
-  if (!win) return
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${accountName} — Finance Flash</title>
+  printDocument(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(accountName)} — Finance Flash</title>
 <style>
   body { font-family: Geist, system-ui, sans-serif; padding: 48px; color: #1a1a2e; }
   h1 { font-size: 28px; margin: 0 0 4px; }
@@ -214,7 +213,7 @@ function exportPDF(accountName: string, transactions: Transaction[], balance: nu
   .red { color: #ef4444; }
   .footer { margin-top: 24px; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 16px; }
 </style></head><body>
-<h1>${accountName}</h1>
+<h1>${escapeHTML(accountName)}</h1>
 <p class="sub">Finance Flash · Generated ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 <div class="summary">
   <div class="summary-card" style="background:#eef2ff;"><p class="label">Balance</p><p class="value">${formatRupiah(balance)}</p></div>
@@ -222,12 +221,10 @@ function exportPDF(accountName: string, transactions: Transaction[], balance: nu
   <div class="summary-card" style="background:#fef2f2;"><p class="label">Expense</p><p class="value red">${formatRupiah(expense)}</p></div>
 </div>
 <table><tr><th>Date</th><th>Title</th><th>Category</th><th>Amount</th></tr>
-${transactions.map(t => `<tr><td>${new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td><td>${t.title}</td><td>${t.category}</td><td class="${t.isIncome ? 'green' : 'red'}">${t.isIncome ? '+' : '-'}${formatRupiah(t.amount)}</td></tr>`).join('')}
+${transactions.map(t => `<tr><td>${new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td><td>${escapeHTML(t.title)}</td><td>${escapeHTML(t.category)}</td><td class="${t.isIncome ? 'green' : 'red'}">${t.isIncome ? '+' : '-'}${formatRupiah(t.amount)}</td></tr>`).join('')}
 </table>
 <p class="footer">${transactions.length} transactions · Balance: ${formatRupiah(balance)}</p>
 </body></html>`)
-  win.document.close()
-  win.print()
 }
 
 export default function AccountDetailPage() {
