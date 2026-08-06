@@ -207,6 +207,20 @@ export function getActiveAccounts(accounts: Account[]): Account[] {
   return accounts.filter(a => !a.isSettled);
 }
 
+// Display name for a transaction's account. Must be looked up against the full
+// account list — a settled loan is hidden from pickers but its past
+// transactions still belong to it, and showing them as unassigned is wrong.
+// Returns null only when the account genuinely no longer exists.
+export function getAccountLabel(
+  accounts: Account[],
+  accountId: string | null
+): string | null {
+  if (!accountId) return null;
+  const account = accounts.find(a => a.id === accountId);
+  if (!account) return null;
+  return account.isSettled ? `${account.name} - Lunas` : account.name;
+}
+
 export function getSettledAccounts(accounts: Account[]): Account[] {
   return accounts.filter(a => a.isSettled);
 }

@@ -176,7 +176,9 @@ function RecurringFormModal({
             >
               None
             </button>
-            {state.accounts.map(acc => (
+            {state.accounts
+              .filter(acc => !acc.isSettled || acc.id === form.accountId)
+              .map(acc => (
               <button
                 key={acc.id}
                 onClick={() => setForm(f => ({ ...f, accountId: acc.id }))}
@@ -185,7 +187,7 @@ function RecurringFormModal({
                 }`}
                 style={form.accountId === acc.id ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}
               >
-                {acc.name}
+                {acc.isSettled ? `${acc.name} - Lunas` : acc.name}
               </button>
             ))}
           </div>

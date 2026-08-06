@@ -56,6 +56,13 @@ export default function AddTransactionModal({
 
   if (!open) return null
 
+  // Settled loans are closed, so they must not be offered for new transactions.
+  // The one exception is the account this transaction is already assigned to —
+  // hiding it would leave no chip selected and read as unassigned.
+  const selectableAccounts = state.accounts.filter(
+    acc => !acc.isSettled || acc.id === form.accountId
+  )
+
   const handleSave = () => {
     const amount = parseInt(form.amount.replace(/\D/g, ''), 10) || 0
     if (!form.title || amount <= 0) return
@@ -141,7 +148,7 @@ export default function AddTransactionModal({
             >
               None
             </button>
-            {state.accounts.map(acc => (
+            {selectableAccounts.map(acc => (
               <button
                 key={acc.id}
                 onClick={() => setForm(f => ({ ...f, accountId: acc.id }))}
@@ -153,7 +160,7 @@ export default function AddTransactionModal({
                 style={form.accountId === acc.id ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}
               >
                 <AcctIcon type={acc.type} className="w-3.5 h-3.5" />
-                {acc.name}
+                {acc.isSettled ? `${acc.name} - Lunas` : acc.name}
               </button>
             ))}
           </div>

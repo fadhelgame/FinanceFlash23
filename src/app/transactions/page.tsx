@@ -5,7 +5,7 @@ import Link from 'next/link'
 import AuthGuard from '@/components/AuthGuard'
 import NavBar from '@/components/NavBar'
 import { useFinanceStore } from '@/lib/store'
-import { formatIDR, CATEGORIES, generateId, getActiveAccounts } from '@/lib/types'
+import { formatIDR, CATEGORIES, generateId, getActiveAccounts, getAccountLabel } from '@/lib/types'
 import type { Transaction, TransactionCategory } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon } from '@/lib/ui-utils'
 import {
@@ -354,7 +354,7 @@ export default function TransactionsPage() {
           <div className="space-y-2">
             {filtered.map(tx => {
               const color = CATEGORY_COLORS[tx.category]
-              const accountName = accounts.find(a => a.id === tx.accountId)?.name
+              const accountName = getAccountLabel(state.accounts, tx.accountId)
               const isSelected = selectedTxIds.has(tx.id)
               return selectMode ? (
                 <button
@@ -545,11 +545,13 @@ export default function TransactionsPage() {
                   style={addForm.accountId === null ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}>
                   None
                 </button>
-                {state.accounts.map(acc => (
+                {state.accounts
+                  .filter(acc => !acc.isSettled || acc.id === addForm.accountId)
+                  .map(acc => (
                   <button key={acc.id} onClick={() => setAddForm(f => ({ ...f, accountId: acc.id }))}
                     className={`shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all ${addForm.accountId === acc.id ? 'btn-primary text-xs py-2' : ''}`}
                     style={addForm.accountId === acc.id ? {} : { background: 'var(--color-paper-2)', color: 'var(--color-ink-2)' }}>
-                    {acc.name}
+                    {acc.isSettled ? `${acc.name} - Lunas` : acc.name}
                   </button>
                 ))}
               </div>

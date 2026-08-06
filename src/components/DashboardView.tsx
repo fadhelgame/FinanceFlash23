@@ -4,7 +4,7 @@ import { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
 import { useAuth } from '@/lib/auth-context'
-import { formatIDR, getTotalBalance, getTotalIncome, getTotalExpense, getAccountBalance, getActiveAccounts, getSettledAccounts, CATEGORIES, generateId } from '@/lib/types'
+import { formatIDR, getTotalBalance, getTotalIncome, getTotalExpense, getAccountBalance, getActiveAccounts, getSettledAccounts, getAccountLabel, CATEGORIES, generateId } from '@/lib/types'
 import type { Account, Transaction, RecurringTransaction, TransactionCategory, AccountType } from '@/lib/types'
 import { CATEGORY_COLORS, CatIcon, ACCOUNT_TYPE_COLORS, AcctIcon } from '@/lib/ui-utils'
 import {
@@ -450,7 +450,7 @@ export default function DashboardView({
             <div className="space-y-2">
               {latestTx.map(tx => {
                 const isSelected = selectedTxIds.has(tx.id)
-                const accountName = accounts.find(a => a.id === tx.accountId)?.name
+                const accountName = getAccountLabel(state.accounts, tx.accountId)
                 return selectMode ? (
                   <button
                     key={tx.id}
