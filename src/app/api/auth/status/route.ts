@@ -11,6 +11,15 @@ export async function GET() {
   // logout.
   const { revoked } = await getValidTokensResult()
   if (revoked) {
+    // Log which of the two very different causes it was. "no token cookie"
+    // means the browser dropped or never had it; "grant revoked" means Google
+    // rejected the refresh token. They need opposite fixes, and guessing after
+    // the fact is not possible without this line.
+    const hadCookie = !!cookieStore.get('google_tokens')
+    console.error(
+      `Session ended for ${email?.value ?? 'unknown'}: ` +
+        (hadCookie ? 'grant revoked by Google' : 'no token cookie present')
+    )
     return NextResponse.json({ authenticated: false })
   }
 
