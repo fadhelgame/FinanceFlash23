@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import type { Account, Transaction, RecurringTransaction, FinanceData } from './types'
-import { processRecurring, generateId } from './types'
+import { processRecurring } from './types'
 
 interface FinanceState {
   accounts: Account[]
@@ -83,6 +83,15 @@ function getFinanceData(state: FinanceState): FinanceData {
   }
 }
 
+function hasData(data: FinanceData | null | undefined): boolean {
+  if (!data) return false
+  return (
+    (data.accounts?.length ?? 0) > 0 ||
+    (data.transactions?.length ?? 0) > 0 ||
+    (data.recurringTransactions?.length ?? 0) > 0
+  )
+}
+
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     accounts: [],
@@ -94,11 +103,33 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [isDemoMode, setDemoMode] = useState(false)
   const stateRef = useRef(state)
-  const savingRef = useRef(false)
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const demoModeRef = useRef(false)
-  stateRef.current = state
-  demoModeRef.current = isDemoMode
+  // True when a remote source failed to answer during load. While degraded we
+  // hold no authoritative snapshot, so an empty state is meaningless and must
+  // never be written back over the real data.
+  const loadDegradedRef = useRef(true)
+
+  // Mirror state into refs after commit, so the unload handler and the batch
+  // interval can read the latest values without re-subscribing.
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
+  useEffect(() => {
+    demoModeRef.current = isDemoMode
+  }, [isDemoMode])
+
+  // An empty payload is only safe to persist when we know the emptiness is real
+  // — i.e. the load phase completed against every source without errors.
+  const canPersistRemote = useCallback((data: FinanceData): boolean => {
+    if (hasData(data)) return true
+    if (loadDegradedRef.current) {
+      console.warn('Skipping remote save of empty state — load was degraded')
+      return false
+    }
+    return true
+  }, [])
 
   // Persist to localStorage synchronously on every state change
   useEffect(() => {
@@ -107,25 +138,36 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [state])
 
-  // Fire Turso save in background on every change (fire-and-forget)
+  // Sync to Turso on change, debounced so a burst of edits is one write
   useEffect(() => {
     if (!state.loaded) return
     if (isDemoMode) return
 
     const data = getFinanceData(state)
+    if (!canPersistRemote(data)) return
 
-    // Fire-and-forget Turso save (no debounce — Turso is fast)
-    const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
-    if (email) {
-      fetch('/api/turso/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: decodeURIComponent(email), data }),
-      }).catch(() => {})
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
+      if (email) {
+        fetch('/api/turso/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: decodeURIComponent(email),
+            data,
+            // Only vouch for an empty payload when the load phase was clean.
+            allowEmpty: !loadDegradedRef.current,
+          }),
+        }).catch(() => {})
+      }
+      setLastSaved(new Date().toLocaleTimeString('id-ID'))
+    }, 800)
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-
-    setLastSaved(new Date().toLocaleTimeString('id-ID'))
-  }, [state])
+  }, [state, isDemoMode, canPersistRemote])
 
   // Batch sync to Drive every 5 minutes
   useEffect(() => {
@@ -136,7 +178,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         const { saveToDrive: apiSave } = await import('./google-drive')
         const data = getFinanceData(stateRef.current)
         // Only sync if we have data
-        if (data.accounts.length > 0 || data.transactions.length > 0 || data.recurringTransactions.length > 0) {
+        if (hasData(data)) {
           setSaving(true)
           await apiSave(data)
           setSaving(false)
@@ -147,7 +189,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }, 5 * 60 * 1000) // 5 minutes
 
     return () => clearInterval(interval)
-  }, [state.loaded])
+  }, [state.loaded, isDemoMode])
 
   // Save on tab close / hide
   useEffect(() => {
@@ -155,8 +197,25 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       if (demoModeRef.current) return
       const data = getFinanceData(stateRef.current)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      if (!canPersistRemote(data)) return
+
+      // Flush the debounced Turso write — the page may not survive long enough
+      // for a normal fetch, so hand it to the browser to deliver.
+      const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
+      if (email) {
+        const body = JSON.stringify({
+          email: decodeURIComponent(email),
+          data,
+          allowEmpty: !loadDegradedRef.current,
+        })
+        navigator.sendBeacon(
+          '/api/turso/save',
+          new Blob([body], { type: 'application/json' })
+        )
+      }
+
       import('./google-drive').then(m =>
-        m.saveToDrive(data).catch(() => {})
+        m.saveToDrive(data, !loadDegradedRef.current).catch(() => {})
       )
     }
 
@@ -173,19 +232,41 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('beforeunload', handleSave)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [canPersistRemote])
 
-  // Merge data on load — take the latest version from either source
+  // Load from every source and keep the freshest snapshot that actually holds
+  // data. No single source is "the" source of truth — any of them can be stale
+  // or briefly unreachable, and losing to an unreachable one costs real data.
   const loadFromSource = useCallback(async () => {
     let driveData: FinanceData | null = null
+    let tursoData: FinanceData | null = null
     let localData: FinanceData | null = null
+    let degraded = false
+
+    const email = document.cookie.match(/google_email=([^;]+)/)?.[1]
 
     // Try Drive
     try {
       const { loadFromDrive } = await import('./google-drive')
       driveData = await loadFromDrive<FinanceData>()
     } catch {
-      console.warn('Drive load unavailable, using local data');
+      degraded = true
+      console.warn('Drive load failed — treating as unavailable, not as empty')
+    }
+
+    // Try Turso
+    if (email) {
+      try {
+        const res = await fetch(
+          `/api/turso/load?email=${encodeURIComponent(decodeURIComponent(email))}`
+        )
+        if (!res.ok) throw new Error(`turso load ${res.status}`)
+        const json = await res.json()
+        tursoData = Array.isArray(json?.accounts) ? (json as FinanceData) : null
+      } catch {
+        degraded = true
+        console.warn('Turso load failed — treating as unavailable, not as empty')
+      }
     }
 
     // Try localStorage
@@ -198,26 +279,30 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       console.warn('localStorage read failed');
     }
 
-    // Merge: take the most recent data from Drive (source of truth)
-    // localStorage is just a cache — Drive wins always
-    const merged: FinanceData = driveData
-      ? { ...driveData }
-      : localData
-        ? { ...localData }
-        : {
-            accounts: [],
-            transactions: [],
-            recurringTransactions: [],
-            lastUpdated: new Date().toISOString(),
-          }
+    const candidates = [driveData, tursoData, localData]
+      .filter((d): d is FinanceData => hasData(d))
+      .sort(
+        (a, b) =>
+          (Date.parse(b.lastUpdated ?? '') || 0) - (Date.parse(a.lastUpdated ?? '') || 0)
+      )
 
-    // If Drive was available, overwrite localStorage with its data
-    // so stale demo cache never pollutes
-    if (driveData) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(driveData)) } catch {}
+    const merged: FinanceData = candidates[0] ?? {
+      accounts: [],
+      transactions: [],
+      recurringTransactions: [],
+      lastUpdated: new Date().toISOString(),
     }
 
-    if (merged.accounts.length > 0 || merged.transactions.length > 0 || merged.recurringTransactions.length > 0) {
+    // Only unlock empty remote writes once every source answered cleanly.
+    loadDegradedRef.current = degraded
+
+    // Keep the local cache aligned with whatever won, so a stale cache never
+    // resurfaces later as the freshest candidate.
+    if (hasData(merged)) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)) } catch {}
+    }
+
+    if (hasData(merged)) {
       const { newTransactions, updatedRecurring } = processRecurring(
         merged.recurringTransactions || [],
         merged.transactions || []
@@ -241,8 +326,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setSaving(true)
       const data = getFinanceData(stateRef.current)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      if (!canPersistRemote(data)) {
+        setSaving(false)
+        return false
+      }
       const { saveToDrive: apiSave } = await import('./google-drive')
-      await apiSave(data)
+      await apiSave(data, !loadDegradedRef.current)
       setLastSaved(new Date().toLocaleTimeString('id-ID'))
       setSaving(false)
       return true
@@ -250,7 +339,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setSaving(false)
       return false
     }
-  }, [])
+  }, [canPersistRemote])
 
   useEffect(() => {
     loadFromSource()
