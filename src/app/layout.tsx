@@ -26,6 +26,12 @@ export const metadata: Metadata = {
   verification: {
     google: '80Dp47SpkyYbYkYB1r7QDFdw7TJ9EAbuj9iggDhu6NE',
   },
+  other: {
+    // Next emits the standardised `mobile-web-app-capable`, which iOS only
+    // started honouring in 17.4. Older iPhones need the Apple-prefixed name or
+    // the shortcut opens in Safari with the address bar.
+    'apple-mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {
